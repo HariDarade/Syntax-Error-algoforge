@@ -1,27 +1,58 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   Container,
   HeaderWrapper,
   Logo,
-  Nav,
-  NavLink,
   HeroWrapper,
   HeroTitle,
   HeroSubtitle,
   Button,
-  FeaturesWrapper,
-  FeatureCard,
   FooterWrapper,
   PageContent,
+  AboutWrapper,
+  AboutTitle,
+  AboutDescription,
+  FeatureCard,
 } from './LandingPageStyles';
 
 // Import the logo
 import MediQueueLogo from '../assets/mediqueue-logo.png';
 
-// Landing Page Component with Routing
+// Animation Variants
+const heroTitleVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { duration: 1 } },
+};
+
+const heroSubtitleVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { duration: 1, delay: 0.3 } },
+};
+
+const buttonVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, delay: 0.6 } },
+};
+
+const aboutVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, delay: 0.2 } },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: i * 0.3 }, // Increased delay for row-based animation
+  }),
+};
+
+// Landing Page Component
 const LandingPage: React.FC = () => {
-  // Header Component
+  // Header Component (without Nav)
   const Header = () => (
     <HeaderWrapper>
       <Logo>
@@ -32,15 +63,10 @@ const LandingPage: React.FC = () => {
         />
         MediQueue
       </Logo>
-      <Nav>
-        <NavLink to="/">Home</NavLink>
-        <NavLink to="/features">Features</NavLink>
-        <NavLink to="/about">About</NavLink>
-      </Nav>
     </HeaderWrapper>
   );
 
-  // Hero Component
+  // Hero Component (with navigation)
   const Hero = () => {
     const navigate = useNavigate(); // Hook to programmatically navigate
 
@@ -50,31 +76,103 @@ const LandingPage: React.FC = () => {
 
     return (
       <HeroWrapper>
-        <HeroTitle>Revolutionizing HealthCare Sector</HeroTitle>
-        <HeroSubtitle>
-          Manage appointments and patient queues effortlessly with MediQueue.
-        </HeroSubtitle>
-        <Button onClick={handleGetStarted}>Get Started</Button>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={heroTitleVariants}
+        >
+          <HeroTitle>Revolutionizing HealthCare Sector</HeroTitle>
+        </motion.div>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={heroSubtitleVariants}
+        >
+          <HeroSubtitle>
+            Manage appointments and patient queues effortlessly with MediQueue.
+          </HeroSubtitle>
+        </motion.div>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={buttonVariants}
+        >
+          <Button onClick={handleGetStarted}>Get Started</Button>
+        </motion.div>
       </HeroWrapper>
     );
   };
 
-  // Features Component (used only on the Features page)
-  const Features = () => (
-    <FeaturesWrapper>
-      <FeatureCard>
-        <h3>Easy Scheduling</h3>
-        <p>Book appointments in seconds.</p>
-      </FeatureCard>
-      <FeatureCard>
-        <h3>Real-Time Updates</h3>
-        <p>Get live queue status.</p>
-      </FeatureCard>
-      <FeatureCard>
-        <h3>Patient-Friendly</h3>
-        <p>Designed for ease of use.</p>
-      </FeatureCard>
-    </FeaturesWrapper>
+  // About MediQueue Component
+  const AboutMediQueue = () => (
+    <AboutWrapper
+      initial="hidden"
+      animate="visible"
+      variants={aboutVariants}
+    >
+      <AboutTitle>About MediQueue</AboutTitle>
+      <AboutDescription>
+        MediQueue is a cutting-edge management system designed to streamline patient management for both hospitals and patients. With advanced predictive analytics, MediQueue helps hospitals anticipate patient inflow, ensuring efficient resource allocation and reduced waiting times.
+      </AboutDescription>
+      <div className="features-grid">
+        <FeatureCard
+          custom={0}
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+        >
+          <h3>Live Patient Queue</h3>
+          <p>
+            Patients can view real-time queue updates, making their hospital visits smoother and more predictable. Get instant notifications about your position in the queue and estimated wait times.
+          </p>
+          <p className="additional-info">
+            <strong>Additional Benefit:</strong> Reduces patient anxiety by providing transparency and allows for better time management during hospital visits.
+          </p>
+        </FeatureCard>
+        <FeatureCard
+          custom={1}
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+        >
+          <h3>Inventory Management for Hospitals</h3>
+          <p>
+            Hospital staff gain access to detailed inventory insights, ensuring critical supplies are always available. Track stock levels, expiration dates, and usage patterns in real-time.
+          </p>
+          <p className="additional-info">
+            <strong>Additional Benefit:</strong> Prevents shortages of essential medical supplies and optimizes procurement processes for cost efficiency.
+          </p>
+        </FeatureCard>
+        <FeatureCard
+          custom={2}
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+        >
+          <h3>Inter-Hospital Communication</h3>
+          <p>
+            MediQueue enables various hospitals to communicate and collaborate, sharing resources and fulfilling requirements seamlessly. Request or offer equipment, staff, or beds during emergencies.
+          </p>
+          <p className="additional-info">
+            <strong>Additional Benefit:</strong> Enhances regional healthcare coordination and ensures no hospital is overwhelmed during peak times.
+          </p>
+        </FeatureCard>
+        <FeatureCard
+          custom={3}
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+        >
+          <h3>Focused on Both Hospitals and Patients</h3>
+          <p>
+            Whether you're a healthcare provider or a patient, MediQueue is designed to enhance your experience with intuitive features. Hospitals benefit from streamlined operations, while patients enjoy a hassle-free experience.
+          </p>
+          <p className="additional-info">
+            <strong>Additional Benefit:</strong> Bridges the gap between healthcare providers and patients, fostering trust and improving overall satisfaction.
+          </p>
+        </FeatureCard>
+      </div>
+    </AboutWrapper>
   );
 
   // Footer Component
@@ -84,40 +182,37 @@ const LandingPage: React.FC = () => {
     </FooterWrapper>
   );
 
-  // Page Components
+  // Home Page
   const HomePage = () => (
     <Container>
+      {/* Wrapper for cosmic particles */}
+      <div className="particles-wrapper">
+        <div className="particle" />
+        <div className="particle" />
+        <div className="particle" />
+        <div className="particle" />
+        <div className="particle" />
+        <div className="particle" />
+      </div>
       <Header />
       <Hero />
+      <AboutMediQueue />
       <Footer />
     </Container>
   );
 
-  const FeaturesPage = () => (
-    <Container>
-      <Header />
-      <PageContent>
-        <h2>Features</h2>
-        <p>Explore the powerful features of MediQueue.</p>
-        <Features />
-      </PageContent>
-      <Footer />
-    </Container>
-  );
-
-  const AboutPage = () => (
-    <Container>
-      <Header />
-      <PageContent>
-        <h2>About Us</h2>
-        <p>Learn more about MediQueue and our mission to improve healthcare efficiency.</p>
-      </PageContent>
-      <Footer />
-    </Container>
-  );
-
+  // Get Started Page
   const GetStartedPage = () => (
     <Container>
+      {/* Wrapper for cosmic particles */}
+      <div className="particles-wrapper">
+        <div className="particle" />
+        <div className="particle" />
+        <div className="particle" />
+        <div className="particle" />
+        <div className="particle" />
+        <div className="particle" />
+      </div>
       <Header />
       <PageContent>
         <h2>Get Started with MediQueue</h2>
@@ -133,8 +228,6 @@ const LandingPage: React.FC = () => {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/features" element={<FeaturesPage />} />
-        <Route path="/about" element={<AboutPage />} />
         <Route path="/get-started" element={<GetStartedPage />} />
       </Routes>
     </Router>
