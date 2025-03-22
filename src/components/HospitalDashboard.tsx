@@ -390,7 +390,7 @@ const HospitalDashboard: React.FC = () => {
 
         {/* Analytics Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="shadow-lg rounded-xl p-6 bg-white transition-transform transform hover:scale-105 animate-fade-in">
+          <div className="shadow-lg rounded-xl p-6 bg-white transition-transform transform hover:scale-105">
             <h2 className="text-lg font-bold mb-4 flex items-center text-gray-900">
               <BarChart2 className="h-5 w-5 mr-2 text-blue-600" />
               Statistics
@@ -405,13 +405,13 @@ const HospitalDashboard: React.FC = () => {
               Inactive Hospitals: <span className="font-semibold">{statusData.Inactive}</span>
             </p>
           </div>
-          <div className="shadow-lg rounded-xl p-6 bg-white transition-transform transform hover:scale-105 animate-fade-in">
+          <div className="shadow-lg rounded-xl p-6 bg-white transition-transform transform hover:scale-105">
             <h2 className="text-lg font-bold mb-4 text-gray-900">Hospitals by Department</h2>
             <div className="flex justify-center h-64">
               <Pie data={departmentChartData} options={chartOptions} />
             </div>
           </div>
-          <div className="shadow-lg rounded-xl p-6 bg-white transition-transform transform hover:scale-105 animate-fade-in">
+          <div className="shadow-lg rounded-xl p-6 bg-white transition-transform transform hover:scale-105">
             <h2 className="text-lg font-bold mb-4 text-gray-900">Hospital Status Distribution</h2>
             <div className="flex justify-center h-64">
               <Pie data={statusChartDataForChartJS} options={chartOptions} />
@@ -422,8 +422,8 @@ const HospitalDashboard: React.FC = () => {
         {/* Add Hospital Modal */}
         {showAddModal && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="rounded-xl p-8 w-full max-w-3xl bg-white text-gray-900 animate-fade-in shadow-2xl">
-              <h2 className="text-xl font-bold mb-6 text-gray-900">Add New Hospital</h2>
+            <div className="rounded-xl p-8 w-full max-w-3xl bg-white text-gray-900 shadow-2xl">
+              <h2 className="text-xl font-bold mb-8 text-gray-900">Add New Hospital</h2>
               <form onSubmit={handleAddHospital}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Left Column */}
@@ -434,14 +434,14 @@ const HospitalDashboard: React.FC = () => {
                         required
                         value={newHospital.username}
                         onChange={(e) => setNewHospital({ ...newHospital, username: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="username"
                         aria-label="Username"
                       />
                       <label
                         htmlFor="username"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.username ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.username ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Username
                       </label>
@@ -452,14 +452,14 @@ const HospitalDashboard: React.FC = () => {
                         required
                         value={newHospital.password}
                         onChange={(e) => setNewHospital({ ...newHospital, password: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="password"
                         aria-label="Password"
                       />
                       <label
                         htmlFor="password"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.password ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.password ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Password
                       </label>
@@ -470,14 +470,14 @@ const HospitalDashboard: React.FC = () => {
                         required
                         value={newHospital.email}
                         onChange={(e) => setNewHospital({ ...newHospital, email: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="email"
                         aria-label="Email"
                       />
                       <label
                         htmlFor="email"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.email ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.email ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Email
                       </label>
@@ -488,14 +488,14 @@ const HospitalDashboard: React.FC = () => {
                         required
                         value={newHospital.hospitalId}
                         onChange={(e) => setNewHospital({ ...newHospital, hospitalId: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="hospitalId"
                         aria-label="Hospital ID"
                       />
                       <label
                         htmlFor="hospitalId"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.hospitalId ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.hospitalId ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Hospital ID
                       </label>
@@ -508,14 +508,14 @@ const HospitalDashboard: React.FC = () => {
                         type="text"
                         value={newHospital.hospitalName}
                         onChange={(e) => setNewHospital({ ...newHospital, hospitalName: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="hospitalName"
                         aria-label="Hospital Name"
                       />
                       <label
                         htmlFor="hospitalName"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.hospitalName ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.hospitalName ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Hospital Name
                       </label>
@@ -525,14 +525,14 @@ const HospitalDashboard: React.FC = () => {
                         type="tel"
                         value={newHospital.hospitalPhone}
                         onChange={(e) => setNewHospital({ ...newHospital, hospitalPhone: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="hospitalPhone"
                         aria-label="Hospital Phone"
                       />
                       <label
                         htmlFor="hospitalPhone"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.hospitalPhone ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.hospitalPhone ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Hospital Phone
                       </label>
@@ -543,14 +543,14 @@ const HospitalDashboard: React.FC = () => {
                         required
                         value={newHospital.employeeId}
                         onChange={(e) => setNewHospital({ ...newHospital, employeeId: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="employeeId"
                         aria-label="Employee ID"
                       />
                       <label
                         htmlFor="employeeId"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.employeeId ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.employeeId ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Employee ID
                       </label>
@@ -560,14 +560,14 @@ const HospitalDashboard: React.FC = () => {
                         type="text"
                         value={newHospital.staffDepartment}
                         onChange={(e) => setNewHospital({ ...newHospital, staffDepartment: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="staffDepartment"
                         aria-label="Department"
                       />
                       <label
                         htmlFor="staffDepartment"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.staffDepartment ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.staffDepartment ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Department
                       </label>
@@ -576,24 +576,22 @@ const HospitalDashboard: React.FC = () => {
                 </div>
                 {/* Status Field (Full Width) */}
                 <div className="mt-6">
-                  <div className="relative">
-                    <select
-                      value={newHospital.status}
-                      onChange={(e) => setNewHospital({ ...newHospital, status: e.target.value as 'Active' | 'Inactive' })}
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-gray-50 text-gray-900 border-gray-300"
-                      id="status"
-                      aria-label="Status"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                    <label
-                      htmlFor="status"
-                      className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${newHospital.status ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
-                    >
-                      Status
-                    </label>
-                  </div>
+                  <label
+                    htmlFor="status"
+                    className="block text-sm font-medium text-gray-500 mb-1 form-label"
+                  >
+                    Status
+                  </label>
+                  <select
+                    value={newHospital.status}
+                    onChange={(e) => setNewHospital({ ...newHospital, status: e.target.value as 'Active' | 'Inactive' })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-white text-gray-900 border-gray-300 form-select"
+                    id="status"
+                    aria-label="Status"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
                 </div>
                 <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
                   <button
@@ -618,8 +616,8 @@ const HospitalDashboard: React.FC = () => {
         {/* Edit Hospital Modal */}
         {showEditModal && editHospital && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="rounded-xl p-8 w-full max-w-3xl bg-white text-gray-900 animate-fade-in shadow-2xl">
-              <h2 className="text-xl font-bold mb-6 text-gray-900">Edit Hospital</h2>
+            <div className="rounded-xl p-8 w-full max-w-3xl bg-white text-gray-900 shadow-2xl">
+              <h2 className="text-xl font-bold mb-8 text-gray-900">Edit Hospital</h2>
               <form onSubmit={handleUpdateHospital}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Left Column */}
@@ -629,14 +627,14 @@ const HospitalDashboard: React.FC = () => {
                         type="text"
                         disabled
                         value={editHospital.username}
-                        className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="edit-username"
                         aria-label="Username"
                       />
                       <label
                         htmlFor="edit-username"
-                        className="absolute left-4 -top-6 text-xs text-blue-500"
+                        className="absolute left-4 -top-6 text-xs text-blue-500 form-label"
                       >
                         Username
                       </label>
@@ -647,14 +645,14 @@ const HospitalDashboard: React.FC = () => {
                         required
                         value={editHospital.email}
                         onChange={(e) => setEditHospital({ ...editHospital, email: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="edit-email"
                         aria-label="Email"
                       />
                       <label
                         htmlFor="edit-email"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.email ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.email ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Email
                       </label>
@@ -665,14 +663,14 @@ const HospitalDashboard: React.FC = () => {
                         required
                         value={editHospital.hospitalId || ''}
                         onChange={(e) => setEditHospital({ ...editHospital, hospitalId: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="edit-hospitalId"
                         aria-label="Hospital ID"
                       />
                       <label
                         htmlFor="edit-hospitalId"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.hospitalId ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.hospitalId ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Hospital ID
                       </label>
@@ -682,14 +680,14 @@ const HospitalDashboard: React.FC = () => {
                         type="text"
                         value={editHospital.hospitalName || ''}
                         onChange={(e) => setEditHospital({ ...editHospital, hospitalName: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="edit-hospitalName"
                         aria-label="Hospital Name"
                       />
                       <label
                         htmlFor="edit-hospitalName"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.hospitalName ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.hospitalName ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Hospital Name
                       </label>
@@ -702,14 +700,14 @@ const HospitalDashboard: React.FC = () => {
                         type="tel"
                         value={editHospital.hospitalPhone || ''}
                         onChange={(e) => setEditHospital({ ...editHospital, hospitalPhone: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="edit-hospitalPhone"
                         aria-label="Hospital Phone"
                       />
                       <label
                         htmlFor="edit-hospitalPhone"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.hospitalPhone ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.hospitalPhone ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Hospital Phone
                       </label>
@@ -720,14 +718,14 @@ const HospitalDashboard: React.FC = () => {
                         required
                         value={editHospital.employeeId || ''}
                         onChange={(e) => setEditHospital({ ...editHospital, employeeId: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="edit-employeeId"
                         aria-label="Employee ID"
                       />
                       <label
                         htmlFor="edit-employeeId"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.employeeId ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.employeeId ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Employee ID
                       </label>
@@ -737,14 +735,14 @@ const HospitalDashboard: React.FC = () => {
                         type="text"
                         value={editHospital.staffDepartment || ''}
                         onChange={(e) => setEditHospital({ ...editHospital, staffDepartment: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-white text-gray-900 border-gray-300 form-input"
                         placeholder=" "
                         id="edit-staffDepartment"
                         aria-label="Department"
                       />
                       <label
                         htmlFor="edit-staffDepartment"
-                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.staffDepartment ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
+                        className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.staffDepartment ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'} form-label`}
                       >
                         Department
                       </label>
@@ -753,24 +751,22 @@ const HospitalDashboard: React.FC = () => {
                 </div>
                 {/* Status Field (Full Width) */}
                 <div className="mt-6">
-                  <div className="relative">
-                    <select
-                      value={editHospital.status}
-                      onChange={(e) => setEditHospital({ ...editHospital, status: e.target.value as 'Active' | 'Inactive' })}
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all peer bg-gray-50 text-gray-900 border-gray-300"
-                      id="edit-status"
-                      aria-label="Status"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                    <label
-                      htmlFor="edit-status"
-                      className={`absolute left-4 top-2 text-gray-500 transition-all duration-200 peer-placeholder-shown:top-2 peer-placeholder-shown:text-sm peer-focus:-top-6 peer-focus:text-xs peer-focus:text-blue-500 ${editHospital.status ? '-top-6 text-xs text-blue-500' : 'top-2 text-sm'}`}
-                    >
-                      Status
-                    </label>
-                  </div>
+                  <label
+                    htmlFor="edit-status"
+                    className="block text-sm font-medium text-gray-500 mb-1 form-label"
+                  >
+                    Status
+                  </label>
+                  <select
+                    value={editHospital.status}
+                    onChange={(e) => setEditHospital({ ...editHospital, status: e.target.value as 'Active' | 'Inactive' })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-white text-gray-900 border-gray-300 form-select"
+                    id="edit-status"
+                    aria-label="Status"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
                 </div>
                 <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
                   <button
@@ -793,7 +789,7 @@ const HospitalDashboard: React.FC = () => {
         )}
 
         {/* Hospital List */}
-        <div className="shadow-lg rounded-xl bg-white animate-fade-in">
+        <div className="shadow-lg rounded-xl bg-white">
           <div className="px-6 py-5">
             <h2 className="text-lg font-bold text-gray-900">Registered Hospitals</h2>
             <p className="mt-1 text-sm text-gray-600">
@@ -883,7 +879,7 @@ const HospitalDashboard: React.FC = () => {
         </div>
 
         {/* Audit Log */}
-        <div className="mt-8 shadow-lg rounded-xl p-6 bg-white animate-fade-in">
+        <div className="mt-8 shadow-lg rounded-xl p-6 bg-white">
           <h2 className="text-lg font-bold mb-4 text-gray-900">Audit Log (Last 10 Actions)</h2>
           {auditLog.length === 0 ? (
             <p className="text-sm text-gray-600">No actions recorded yet.</p>
@@ -899,27 +895,12 @@ const HospitalDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Custom CSS for Animations */}
+      {/* Custom CSS */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
         .font-inter {
           font-family: 'Inter', sans-serif;
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fadeIn 0.5s ease-out;
         }
 
         /* Custom Scrollbar */
@@ -938,6 +919,38 @@ const HospitalDashboard: React.FC = () => {
 
         ::-webkit-scrollbar-thumb:hover {
           background: #718096;
+        }
+
+        /* Improved styling for form labels and inputs */
+        .form-label {
+          font-size: 0.875rem; /* 14px */
+          font-weight: 500;
+          color: #6B7280; /* Gray-500 */
+          margin-bottom: 0.25rem; /* 4px */
+        }
+
+        .form-input, .form-select {
+          font-size: 0.875rem; /* 14px */
+          padding: 0.5rem 1rem; /* 8px 16px */
+          border-radius: 0.375rem; /* 6px */
+          border: 1px solid #D1D5DB; /* Gray-300 */
+          background-color: #FFFFFF;
+          color: #1A202C; /* Gray-900 */
+          transition: all 0.2s ease-in-out;
+        }
+
+        .form-input:focus, .form-select:focus {
+          outline: none;
+          border-color: #4A90E2; /* Blue-500 */
+          box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+
+        .form-select {
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 0.75rem center;
+          background-size: 1.25rem;
         }
       `}</style>
     </div>

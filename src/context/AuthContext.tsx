@@ -1,26 +1,33 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface User {
   username: string;
-  role: 'patient' | 'admin' | 'hospital';
+  role: 'patient' | 'hospital' | 'admin' | 'staff'; // Added 'staff' role
   email?: string;
+  phoneNumber?: string;
+  gender?: 'male' | 'female' | 'other';
+  age?: number;
+  diseases?: string[];
+  employeeId?: string;
+  staffDepartment?: string;
   hospitalId?: string;
   hospitalName?: string;
   hospitalPhone?: string;
-  employeeId?: string;
-  staffDepartment?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
-  error: string | null;
-  login: (username: string, password: string, loginType: 'patient' | 'hospital' | 'admin') => Promise<boolean>;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  isHospital: boolean;
+  isStaff: boolean; // Added for staff role checks
+  login: (username: string, password: string, role: 'patient' | 'hospital' | 'admin' | 'staff') => Promise<boolean>;
   signup: (
     username: string,
     password: string,
     email: string,
-    type: 'patient' | 'hospital' | 'admin',
+    role: 'patient' | 'hospital' | 'admin' | 'staff',
     phoneNumber?: string,
     gender?: 'male' | 'female' | 'other',
     age?: number,
@@ -32,51 +39,103 @@ interface AuthContextType {
     hospitalPhone?: string
   ) => Promise<boolean>;
   logout: () => void;
-  isAuthenticated: boolean;
-  isAdmin: boolean;
-  isPatient: boolean;
-  isHospital: boolean;
+  loading: boolean;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const demoUsers: User[] = [
+    { username: 'patient', role: 'patient', email: 'patient@example.com' },
+    { username: 'hospital', role: 'hospital', email: 'hospital@example.com' }, // Renamed 'admin' to 'hospital' for clarity
+    { username: 'admin', role: 'admin', email: 'admin@example.com' }, // Added true admin user
+    { username: 'staff', role: 'staff', email: 'staff@example.com' }, // Fixed role to 'staff'
+  ];
+
+  const demoPasswords: { [key: string]: string } = {
+    patient: 'patient123',
+    hospital: 'hospital123', // Updated to match new username
+    admin: 'admin123',
+    staff: 'staff123',
+  };
+
+  // Handle redirection when user state changes
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (err) {
-        console.error('Error parsing stored user:', err);
-        localStorage.removeItem('user');
+    console.log('User state changed:', user);
+    if (user) {
+      console.log('Redirecting based on role:', user.role);
+      switch (user.role) {
+        case 'patient':
+          navigate('/patient-dashboard', { replace: true });
+          break;
+        case 'hospital':
+          navigate('/hospital-dashboard', { replace: true });
+          break;
+        case 'admin':
+          navigate('/admin', { replace: true });
+          break;
+        case 'staff':
+          navigate('/staff-dashboard', { replace: true }); // Added staff redirection
+          break;
+        default:
+          navigate('/', { replace: true });
+      }
+    } else {
+      const publicRoutes = ['/', '/get-started', '/login', '/about'];
+      if (!publicRoutes.includes(location.pathname)) {
+        console.log('User not authenticated, redirecting to /login');
+        navigate('/login', { replace: true });
       }
     }
-  }, []);
+  }, [user, navigate, location.pathname]);
 
-  const login = async (username: string, password: string, loginType: 'patient' | 'hospital' | 'admin'): Promise<boolean> => {
+  const login = async (username: string, password: string, role: 'patient' | 'hospital' | 'admin' | 'staff') => {
     setLoading(true);
     setError(null);
+
     try {
-      if (
-        (loginType === 'patient' && username === 'patient' && password === 'patient123') ||
-        (loginType === 'hospital' && username === 'hospital' && password === 'hospital123') ||
-        (loginType === 'admin' && username === 'admin' && password === 'admin123')
-      ) {
-        const authenticatedUser: User = { username, role: loginType };
-        setUser(authenticatedUser);
-        localStorage.setItem('user', JSON.stringify(authenticatedUser));
-        return true;
-      } else {
-        setError('Invalid username or password');
-        return false;
+      console.log('Attempting login for:', username, role); // Debug log
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const foundUser = demoUsers.find(
+        (u) => u.username === username && u.role === role
+      );
+
+      if (!foundUser) {
+        throw new Error('User not found');
       }
-    } catch (err) {
-      setError('Login failed. Please try again.');
-      console.error('Login error:', err);
+
+      if (demoPasswords[username] !== password) {
+        throw new Error('Invalid password');
+      }
+
+      console.log('User found:', foundUser); // Debug log
+      setUser(foundUser);
+      localStorage.setItem('user', JSON.stringify(foundUser));
+
+      return true;
+    } catch (err: any) {
+      console.error('Login error:', err.message); // Debug log
+      setError(err.message || 'Login failed');
       return false;
     } finally {
       setLoading(false);
@@ -87,7 +146,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     username: string,
     password: string,
     email: string,
-    type: 'patient' | 'hospital' | 'admin',
+    role: 'patient' | 'hospital' | 'admin' | 'staff',
     phoneNumber?: string,
     gender?: 'male' | 'female' | 'other',
     age?: number,
@@ -97,47 +156,51 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     hospitalId?: string,
     hospitalName?: string,
     hospitalPhone?: string
-  ): Promise<boolean> => {
+  ) => {
     setLoading(true);
     setError(null);
+
     try {
-      const existingUsers = JSON.parse(localStorage.getItem('users') || '{}');
-      if (existingUsers[username]) {
-        setError('Username already exists');
-        return false;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (demoUsers.some((u) => u.username === username)) {
+        throw new Error('Username already exists');
       }
 
-      const newUser: User = { username, role: type, email };
-      if (type === 'hospital') {
-        newUser.employeeId = employeeId;
-        newUser.staffDepartment = staffDepartment;
-      } else if (type === 'admin') {
-        newUser.hospitalId = hospitalId;
-        newUser.hospitalName = hospitalName;
-        newUser.hospitalPhone = hospitalPhone;
-      }
+      const newUser: User = {
+        username,
+        role,
+        email,
+        ...(role === 'patient' && {
+          phoneNumber,
+          gender,
+          age,
+          diseases,
+        }),
+        ...(role === 'hospital' && {
+          employeeId,
+          staffDepartment,
+        }),
+        ...(role === 'admin' && {
+          hospitalId,
+          hospitalName,
+          hospitalPhone,
+        }),
+        ...(role === 'staff' && { // Added staff-specific fields
+          employeeId,
+          staffDepartment,
+        }),
+      };
+
+      demoUsers.push(newUser);
+      demoPasswords[username] = password;
 
       setUser(newUser);
       localStorage.setItem('user', JSON.stringify(newUser));
 
-      existingUsers[username] = {
-        username,
-        password,
-        email,
-        role: type,
-        ...(type === 'hospital' ? { employeeId, staffDepartment } : {}),
-        ...(type === 'admin' ? { hospitalId, hospitalName, hospitalPhone } : {}),
-      };
-      localStorage.setItem('users', JSON.stringify(existingUsers));
-
       return true;
-    } catch (err) {
-      if (err instanceof Error && err.message.includes('exists')) {
-        setError('Username or email already exists');
-      } else {
-        setError('Signup failed. Please try again.');
-      }
-      console.error('Signup error:', err);
+    } catch (err: any) {
+      setError(err.message || 'Signup failed');
       return false;
     } finally {
       setLoading(false);
@@ -147,28 +210,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    navigate('/login');
   };
 
-  const value = {
-    user,
-    loading,
-    error,
-    login,
-    signup,
-    logout,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
-    isPatient: user?.role === 'patient',
-    isHospital: user?.role === 'hospital',
-  };
+  const isAuthenticated = !!user;
+  const isAdmin = user?.role === 'admin';
+  const isHospital = user?.role === 'hospital';
+  const isStaff = user?.role === 'staff'; // Added for staff role checks
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isAdmin,
+        isHospital,
+        isStaff, // Added to context
+        login,
+        signup,
+        logout,
+        loading,
+        error,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };

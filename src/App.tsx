@@ -4,8 +4,9 @@ import { QueueProvider } from './context/QueueContext';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import { HomePage } from './components/LandingPage'; // Removed GetStartedPage import
 import PatientDashboard from './components/PatientDashboard';
-import AdminPanel from './components/AdminPanel';
+import StaffPanel from './components/StaffPanel';
 import LiveQueue from './components/LiveQueue';
 import AnalyticsPage from './components/AnalyticsPage';
 import Login from './components/Login';
@@ -14,23 +15,28 @@ import InventoryManagement from './components/InventoryManagement';
 import AIPredictions from './components/AIPredictions';
 import StaffManagement from './components/StaffManagement';
 import HospitalDashboard from './components/HospitalDashboard';
+import HospitalStaffManagement from './components/HospitalStaffManagement';
+import HospitalQueue from './components/HospitalQueue';
+import HospitalReports from './components/HospitalReports';
 
 function App() {
   return (
-    <AuthProvider>
-      <QueueProvider>
-        <Router>
+    <Router>
+      <AuthProvider>
+        <QueueProvider>
           <div className="flex flex-col min-h-screen bg-gray-50">
             <Navbar />
             <main className="flex-grow">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  {/* Removed the /get-started route */}
                   <Route path="/login" element={<Login />} />
                   <Route 
                     path="/admin" 
                     element={
                       <ProtectedRoute requireAdmin={true}>
-                        <AdminPanel />
+                        <StaffPanel />
                       </ProtectedRoute>
                     } 
                   />
@@ -90,16 +96,40 @@ function App() {
                       </ProtectedRoute>
                     } 
                   />
-                  <Route path="/" element={<Navigate to="/login" replace />} />
-                  <Route path="*" element={<Navigate to="/login" replace />} />
+                  <Route 
+                    path="/hospital-staff-management" 
+                    element={
+                      <ProtectedRoute requireHospital={true}>
+                        <HospitalStaffManagement />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/hospital-queue" 
+                    element={
+                      <ProtectedRoute requireHospital={true}>
+                        <HospitalQueue />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/hospital-reports" 
+                    element={
+                      <ProtectedRoute requireHospital={true}>
+                        <HospitalReports />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route path="/about" element={<div>About Page (Coming Soon)</div>} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>
             </main>
             <Footer />
           </div>
-        </Router>
-      </QueueProvider>
-    </AuthProvider>
+        </QueueProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

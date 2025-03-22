@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Clock, Users, AlertCircle, RefreshCw, Calendar, MessageSquare, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Clock, Users, RefreshCw, Calendar, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import Chatbot from './Chatbot.tsx'; // Added .tsx extension
+import Modals from './Modals.tsx';   // Added .tsx extension
 
-// Mock data (since no backend is available)
+// Mock data
 const mockPatients = [
   {
     id: '1',
@@ -29,42 +31,39 @@ const mockDepartments = [
   { id: '2', name: 'General', currentLoad: 50, averageWaitTime: 30, patientsWaiting: 2 },
 ];
 
-const mockPredictions = [
-  { hour: 10, predictedArrivals: 8, actualArrivals: 5 },
-  { hour: 11, predictedArrivals: 6, actualArrivals: 0 },
-  { hour: 12, predictedArrivals: 7, actualArrivals: 0 },
-];
+// ... (rest of the file remains unchanged)
 
 interface Patient {
   id: string;
   name: string;
   department: string;
-  priority: string;
+  priority: Priority;
   status: string;
   estimatedWaitTime?: number;
   queuePosition?: number;
 }
 
-interface ChatMessage {
-  id: string;
-  text: string;
-  isUser: boolean;
-  timestamp: Date;
-}
+type Priority = 'low' | 'medium' | 'high' | 'emergency' | '';
 
 const PatientDashboard: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
   const [departments, setDepartments] = useState(mockDepartments);
-  const [predictions, setPredictions] = useState(mockPredictions);
   const [user, setUser] = useState({
     role: 'patient',
-    name: 'John Smith', // Default to John Smith for testing; can be changed
-    patientId: '1',     // Default to John Smith's ID for testing
+    name: 'John Smith',
+    patientId: '1',
+    email: 'john.smith@example.com',
+    phoneNumber: '123-456-7890',
+    gender: 'male',
+    age: 35,
+    diseases: ['Hypertension'],
+    avatarUrl: 'https://via.placeholder.com/150',
   });
   const [patientId, setPatientId] = useState<string>('');
   const [searchResult, setSearchResult] = useState<any>(null);
   const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [appointmentForm, setAppointmentForm] = useState({
     department: '',
     date: '',
@@ -72,7 +71,6 @@ const PatientDashboard: React.FC = () => {
     reason: ''
   });
   const [appointments, setAppointments] = useState<any[]>([
-    // Pre-populate with John Smith's appointment in General department if logged in as John
     user.patientId === '1' ? [
       {
         id: 'appt1',
@@ -87,18 +85,11 @@ const PatientDashboard: React.FC = () => {
       },
     ] : [],
   ]);
-  const [hasBookedAppointment, setHasBookedAppointment] = useState(false); // Start without an appointment for new users
-  const [cancelSuccess, setCancelSuccess] = useState<string | null>(null); // New state for cancellation feedback
-
-  // Chatbot states
+  const [hasBookedAppointment, setHasBookedAppointment] = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState('');
-  const [chatContext, setChatContext] = useState<string>(''); // Tracks conversation context
-  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Initialize appointments and hasBookedAppointment based on user login
     const initialAppointments = user.patientId === '1' ? [
       {
         id: 'appt1',
@@ -122,11 +113,11 @@ const PatientDashboard: React.FC = () => {
         if (patient.department === 'Emergency') {
           updatedPatient.priority = 'emergency';
           updatedPatient.status = 'in-progress';
-          updatedPatient.estimatedWaitTime = 5; // Immediate or very short wait for emergencies
+          updatedPatient.estimatedWaitTime = 5;
         } else if (patient.department === 'General') {
           updatedPatient.priority = 'medium';
           updatedPatient.status = 'waiting';
-          updatedPatient.estimatedWaitTime = 30; // Match General department wait time
+          updatedPatient.estimatedWaitTime = 30;
         }
         setCurrentPatient(updatedPatient);
         setSearchResult({ patient: updatedPatient });
@@ -135,13 +126,6 @@ const PatientDashboard: React.FC = () => {
   }, [user, patients, hasBookedAppointment]);
 
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [chatMessages]);
-
-  useEffect(() => {
-    // Clear cancellation success message after 3 seconds
     if (cancelSuccess) {
       const timer = setTimeout(() => setCancelSuccess(null), 3000);
       return () => clearTimeout(timer);
@@ -160,11 +144,11 @@ const PatientDashboard: React.FC = () => {
       if (patient.department === 'Emergency') {
         updatedPatient.priority = 'emergency';
         updatedPatient.status = 'in-progress';
-        updatedPatient.estimatedWaitTime = 5; // Immediate or very short wait
+        updatedPatient.estimatedWaitTime = 5;
       } else if (patient.department === 'General') {
         updatedPatient.priority = 'medium';
         updatedPatient.status = 'waiting';
-        updatedPatient.estimatedWaitTime = 30; // Match General department wait time
+        updatedPatient.estimatedWaitTime = 30;
       }
       setSearchResult({ patient: updatedPatient });
     } else {
@@ -183,7 +167,6 @@ const PatientDashboard: React.FC = () => {
       createdAt: new Date().toISOString()
     };
     
-    // Update patient's queue status to match the new appointment department
     const updatedPatients = patients.map(p => 
       p.id === user.patientId 
         ? { 
@@ -202,7 +185,7 @@ const PatientDashboard: React.FC = () => {
     console.log('Appointment booked:', newAppointment);
     setIsAppointmentModalOpen(false);
     setAppointmentForm({ department: '', date: '', time: '', reason: '' });
-    setHasBookedAppointment(true); // Ensure queue is shown after booking
+    setHasBookedAppointment(true);
   };
 
   const handleCancelAppointment = (appointmentId: string) => {
@@ -211,19 +194,17 @@ const PatientDashboard: React.FC = () => {
       const updatedAppointments = appointments.filter(apt => apt.id !== appointmentId);
       console.log('Updated appointments after cancellation:', updatedAppointments);
 
-      // Update hasBookedAppointment based on whether any appointments remain
       const newHasBookedAppointment = updatedAppointments.length > 0;
       setHasBookedAppointment(newHasBookedAppointment);
 
-      // Update patient's queue status if no appointments remain (reset or remove)
       let updatedPatients = [...patients];
       if (!newHasBookedAppointment && user.patientId) {
         updatedPatients = patients.map(p => 
           p.id === user.patientId 
             ? { 
                 ...p, 
-                department: '', // Clear department to indicate no active queue status
-                priority: '',
+                department: '',
+                priority: '' as Priority,
                 status: '',
                 estimatedWaitTime: undefined,
                 queuePosition: undefined,
@@ -233,119 +214,11 @@ const PatientDashboard: React.FC = () => {
       }
       setPatients(updatedPatients);
       setAppointments(updatedAppointments);
-      setCurrentPatient(null); // Clear current patient data if no appointments
-      setSearchResult(null);   // Clear search result if no appointments
-      setCancelSuccess('Appointment canceled successfully!'); // Show success message
+      setCurrentPatient(null);
+      setSearchResult(null);
+      setCancelSuccess('Appointment canceled successfully!');
       console.log('Patient queue status after cancellation:', updatedPatients);
     }
-  };
-
-  // Enhanced AI chatbot logic
-  const getAIResponse = async (message: string): Promise<string> => {
-    const lowercaseMessage = message.toLowerCase().trim();
-    const patient = currentPatient || searchResult?.patient;
-
-    // Context-aware responses
-    if (chatContext === 'appointment' || lowercaseMessage.includes('appointment')) {
-      setChatContext('appointment');
-      if (lowercaseMessage.includes('how') || lowercaseMessage.includes('book')) {
-        return 'To book an appointment, click the "Book Appointment" button at the top right, then select your department, date, time, and reason.';
-      } else if (lowercaseMessage.includes('cancel')) {
-        return appointments.length > 0 
-          ? 'To cancel an appointment, click the "Cancel" button next to your appointment in the "Your Appointments" section.'
-          : 'You don’t have any appointments to cancel. Would you like to book one?';
-      } else if (lowercaseMessage.includes('upcoming') || lowercaseMessage.includes('my appointment')) {
-        return appointments.length > 0 
-          ? `You have ${appointments.length} upcoming appointment(s). The next one is on ${format(new Date(appointments[0].date), 'MMMM dd, yyyy')} at ${appointments[0].time} in ${appointments[0].department}.`
-          : 'You don’t have any upcoming appointments scheduled.';
-      } else {
-        return 'Would you like help booking an appointment, checking upcoming appointments, or cancelling an appointment?';
-      }
-    }
-
-    if (chatContext === 'wait' || lowercaseMessage.includes('wait time') || lowercaseMessage.includes('waiting')) {
-      setChatContext('wait');
-      if (!hasBookedAppointment) {
-        return 'Please book an appointment first to check wait times or queue status.';
-      }
-      if (!patient) {
-        return 'Please enter your patient ID to check your wait time.';
-      }
-      if (lowercaseMessage.includes('how long')) {
-        if (patient.department === 'Emergency') {
-          return `As an emergency patient, you are currently being attended to with priority 'emergency'. Your wait time is estimated at ${patient.estimatedWaitTime || 5} minutes or less.`;
-        }
-        return patient.status === 'waiting' 
-          ? `Your estimated wait time is ${patient.estimatedWaitTime} minutes. You’re currently at position ${patient.queuePosition} in the queue.`
-          : 'You’re not currently in a waiting status.';
-      } else if (lowercaseMessage.includes('average')) {
-        const avgWait = Math.round(departments.reduce((acc, dept) => acc + dept.averageWaitTime, 0) / departments.length);
-        return `The average wait time across all departments is ${avgWait} minutes right now.`;
-      } else {
-        return 'I can tell you your personal wait time or the average across departments. Which would you like?';
-      }
-    }
-
-    if (chatContext === 'department' || lowercaseMessage.includes('department')) {
-      setChatContext('department');
-      const deptName = departments.find(d => lowercaseMessage.includes(d.name.toLowerCase()))?.name;
-      if (deptName) {
-        const dept = departments.find(d => d.name === deptName);
-        return `${deptName} currently has ${dept?.patientsWaiting} patients waiting, with an average wait time of ${dept?.averageWaitTime} minutes and a load of ${dept?.currentLoad}%.`;
-      } else if (lowercaseMessage.includes('list') || lowercaseMessage.includes('available')) {
-        return `Available departments are: ${departments.map(d => d.name).join(', ')}. Which one would you like details about?`;
-      } else {
-        return 'Which department would you like information about? I can give you wait times, patient counts, or current load.';
-      }
-    }
-
-    // General responses
-    if (lowercaseMessage.includes('hi') || lowercaseMessage.includes('hello')) {
-      return user.patientId === '1' 
-        ? 'Hello, John Smith! I’m here to assist you with your appointments, wait times, or queue predictions. How can I help you today?'
-        : 'Hello! I’m here to assist you with booking an appointment. How can I help you today?';
-    }
-
-    if (lowercaseMessage.includes('prediction') || lowercaseMessage.includes('arrivals')) {
-      if (!hasBookedAppointment) {
-        return 'Please book an appointment first to access queue predictions.';
-      }
-      const currentHour = new Date().getHours();
-      const currentPrediction = predictions.find(p => p.hour === currentHour) || predictions[0];
-      const nextPrediction = predictions.find(p => p.hour === currentHour + 1) || predictions[1];
-      return `For the current hour (${currentHour}:00), we predict ${currentPrediction?.predictedArrivals || 0} arrivals. Next hour, we expect ${nextPrediction?.predictedArrivals || 0}.`;
-    }
-
-    // Default fallback
-    setChatContext('');
-    return user.patientId === '1' 
-      ? 'I can help with managing your appointments, wait times, department info, or queue predictions. What would you like to know about?'
-      : 'I can help with booking an appointment. What would you like to know about?';
-  };
-
-  const handleChatSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      text: chatInput,
-      isUser: true,
-      timestamp: new Date()
-    };
-
-    setChatMessages(prev => [...prev, userMessage]);
-    setChatInput('');
-
-    const aiResponse = await getAIResponse(chatInput);
-    const aiMessage: ChatMessage = {
-      id: (Date.now() + 1).toString(),
-      text: aiResponse,
-      isUser: false,
-      timestamp: new Date()
-    };
-
-    setChatMessages(prev => [...prev, aiMessage]);
   };
 
   const getStatusColor = (status: string) => {
@@ -359,7 +232,7 @@ const PatientDashboard: React.FC = () => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: Priority) => {
     switch (priority) {
       case 'low': return 'bg-green-100 text-green-800';
       case 'medium': return 'bg-blue-100 text-blue-800';
@@ -369,17 +242,36 @@ const PatientDashboard: React.FC = () => {
     }
   };
 
-  const currentHour = new Date().getHours();
-  const currentPrediction = predictions.find(p => p.hour === currentHour) || predictions[0];
-  const nextPrediction = predictions.find(p => p.hour === currentHour + 1) || predictions[1];
+  const handleSignOut = () => {
+    console.log('User signed out');
+    setUser({ role: '', name: '', patientId: '', email: '', phoneNumber: '', gender: '', age: 0, diseases: [], avatarUrl: '' });
+    setIsProfileModalOpen(false);
+  };
+
+  const getInitials = (name: string) => {
+    const nameParts = name.split(' ');
+    if (nameParts.length >= 2) {
+      return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
+    }
+    return name[0]?.toUpperCase() || '';
+  };
 
   return (
     <div className="p-4 md:p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          {user?.role === 'patient' ? `Welcome, ${user.name}` : 'Patient Dashboard'}
-        </h1>
-        <div className="flex gap-2">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+            <svg className="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            MediQueue
+          </h1>
+          <nav className="flex space-x-4">
+            <a href="#" className="text-gray-600 hover:text-blue-600">Dashboard</a>
+            <a href="#" className="text-gray-600 hover:text-blue-600">Live Queue</a>
+          </nav>
+        </div>
+        <div className="flex gap-2 items-center">
           <button 
             onClick={() => setIsAppointmentModalOpen(true)}
             className="flex items-center px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
@@ -389,17 +281,46 @@ const PatientDashboard: React.FC = () => {
           </button>
           <button 
             onClick={() => {
-              setPatients([...mockPatients]); // Refresh with mock data
+              setPatients([...mockPatients]);
               setDepartments([...mockDepartments]);
-              setPredictions([...mockPredictions]);
             }}
             className="flex items-center px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
           >
             <RefreshCw size={16} className="mr-2" />
             Refresh
           </button>
+          <button 
+            onClick={() => setIsProfileModalOpen(true)}
+            className="flex items-center"
+          >
+            {user.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt="Patient Avatar"
+                className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold border-2 border-gray-300">
+                {getInitials(user.name)}
+              </div>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Modals */}
+      <Modals
+        isAppointmentModalOpen={isAppointmentModalOpen}
+        setIsAppointmentModalOpen={setIsAppointmentModalOpen}
+        isProfileModalOpen={isProfileModalOpen}
+        setIsProfileModalOpen={setIsProfileModalOpen}
+        appointmentForm={appointmentForm}
+        setAppointmentForm={setAppointmentForm}
+        departments={departments}
+        user={user}
+        handleAppointmentSubmit={handleAppointmentSubmit}
+        handleSignOut={handleSignOut}
+      />
 
       {/* Cancellation Success Message */}
       {cancelSuccess && (
@@ -408,152 +329,22 @@ const PatientDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Appointment Modal */}
-      {isAppointmentModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Book an Appointment</h2>
-            <form onSubmit={handleAppointmentSubmit}>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Department</label>
-                <select
-                  value={appointmentForm.department}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, department: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select Department</option>
-                  {departments.map(dept => (
-                    <option key={dept.id} value={dept.name}>{dept.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Date</label>
-                <input
-                  type="date"
-                  value={appointmentForm.date}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, date: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min={new Date().toISOString().split('T')[0]}
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Time</label>
-                <input
-                  type="time"
-                  value={appointmentForm.time}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, time: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Reason</label>
-                <textarea
-                  value={appointmentForm.reason}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, reason: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
-                  required
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAppointmentModalOpen(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                >
-                  Book
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Chatbot */}
+      <Chatbot
+        isChatOpen={isChatOpen}
+        setIsChatOpen={setIsChatOpen}
+        user={user}
+        patients={patients}
+        departments={departments}
+        appointments={appointments}
+        hasBookedAppointment={hasBookedAppointment}
+        currentPatient={currentPatient}
+        searchResult={searchResult}
+      />
 
-      {/* Chatbot Button */}
-      <button
-        onClick={() => setIsChatOpen(!isChatOpen)}
-        className="fixed bottom-4 right-4 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-        title="Chat with Health Assistant"
-      >
-        <MessageSquare size={24} />
-      </button>
-
-      {/* Chatbot Window */}
-      {isChatOpen && (
-        <div className="fixed bottom-20 right-4 w-80 bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col">
-          <div className="p-3 bg-blue-600 text-white rounded-t-lg flex justify-between items-center">
-            <h3 className="font-semibold">Health Assistant</h3>
-            <button 
-              onClick={() => setIsChatOpen(false)}
-              className="text-white hover:text-gray-200"
-            >
-              ×
-            </button>
-          </div>
-          
-          <div 
-            ref={chatContainerRef}
-            className="flex-1 p-3 overflow-y-auto max-h-64"
-          >
-            {chatMessages.length === 0 ? (
-              <p className="text-gray-500 text-center text-sm">Ask me about booking an appointment or queue status!</p>
-            ) : (
-              chatMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`mb-2 flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[75%] p-2 rounded-lg ${
-                      message.isUser 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    <p className="text-sm">{message.text}</p>
-                    <span className="text-xs opacity-75 mt-1 block">
-                      {format(message.timestamp, 'HH:mm')}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          
-          <form onSubmit={handleChatSubmit} className="p-3 border-t">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask me anything..."
-                className="flex-1 p-2 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              <button
-                type="submit"
-                className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
-              >
-                Send
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Show only if an appointment has been booked for the logged-in user */}
-      {hasBookedAppointment && user.patientId === '1' && ( // Only show for John Smith
+      {/* Queue Status and Other Sections */}
+      {hasBookedAppointment && user.patientId === '1' && (
         <>
-          {/* Patient Information (if logged in as John Smith) */}
           {currentPatient && (
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <h2 className="text-lg font-semibold mb-3">Your Queue Status</h2>
@@ -591,7 +382,6 @@ const PatientDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Search for patient (only if not logged in as John Smith, but still needing appointment) */}
           {!currentPatient && user.patientId === '1' && (
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <h2 className="text-lg font-semibold mb-3">Find Your Queue Status</h2>
@@ -653,7 +443,6 @@ const PatientDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Appointments Section with Cancel Option (only for John Smith) */}
           {(currentPatient || searchResult?.patient) && appointments.length > 0 && user.patientId === '1' && (
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <h2 className="text-lg font-semibold mb-4">Your Appointments</h2>
@@ -696,8 +485,7 @@ const PatientDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Queue Overview (only for John Smith) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {user.patientId === '1' && (
               <>
                 <div className="bg-white rounded-lg shadow-md p-4">
@@ -723,22 +511,10 @@ const PatientDashboard: React.FC = () => {
                   </div>
                   <p className="text-gray-600">Across all departments</p>
                 </div>
-
-                <div className="bg-white rounded-lg shadow-md p-4">
-                  <div className="flex items-center mb-3">
-                    <AlertCircle size={20} className="text-orange-500 mr-2" />
-                    <h2 className="text-lg font-semibold">Predicted Arrivals</h2>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-800">
-                    {currentPrediction?.predictedArrivals || 0}
-                  </div>
-                  <p className="text-gray-600">Expected in the current hour</p>
-                </div>
               </>
             )}
           </div>
 
-          {/* Department Status (only for John Smith) */}
           {user.patientId === '1' && (
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <h2 className="text-lg font-semibold mb-4">Department Status</h2>
@@ -747,7 +523,6 @@ const PatientDashboard: React.FC = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Load</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Wait Time</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patients Waiting</th>
                     </tr>
@@ -756,57 +531,12 @@ const PatientDashboard: React.FC = () => {
                     {departments.map((dept) => (
                       <tr key={dept.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{dept.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <div 
-                              className={`h-2.5 rounded-full ${
-                                dept.currentLoad > 75 ? 'bg-red-500' : 
-                                dept.currentLoad > 50 ? 'bg-yellow-500' : 'bg-green-500'
-                              }`} 
-                              style={{ width: `${dept.currentLoad}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-xs mt-1 inline-block">{dept.currentLoad}%</span>
-                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dept.averageWaitTime} min</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dept.patientsWaiting}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
-            </div>
-          )}
-
-          {/* Predicted Patient Arrivals (only for John Smith) */}
-          {user.patientId === '1' && (
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h2 className="text-lg font-semibold mb-4">Predicted Patient Arrivals</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium text-gray-700 mb-2">Current Hour ({currentHour}:00 - {currentHour + 1}:00)</h3>
-                  <div className="bg-blue-50 p-4 rounded-md">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-700">Predicted:</span>
-                      <span className="font-semibold">{currentPrediction?.predictedArrivals || 'N/A'} patients</span>
-                    </div>
-                    {currentPrediction?.actualArrivals !== undefined && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Actual so far:</span>
-                        <span className="font-semibold">{currentPrediction.actualArrivals} patients</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-700 mb-2">Next Hour ({currentHour + 1}:00 - {currentHour + 2}:00)</h3>
-                  <div className="bg-purple-50 p-4 rounded-md">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Predicted:</span>
-                      <span className="font-semibold">{nextPrediction?.predictedArrivals || 'N/A'} patients</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           )}

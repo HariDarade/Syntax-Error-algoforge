@@ -13,19 +13,19 @@ const Login: React.FC = () => {
   const [diseases, setDiseases] = useState<string>('');
   const [employeeId, setEmployeeId] = useState<string>('');
   const [staffDepartment, setStaffDepartment] = useState<string>('');
-  const [hospitalId, setHospitalId] = useState<string>(''); // Added for hospital signup
-  const [hospitalName, setHospitalName] = useState<string>(''); // Added for hospital signup
-  const [hospitalPhone, setHospitalPhone] = useState<string>(''); // Added for hospital signup
-  const [loginType, setLoginType] = useState<'patient' | 'hospital' | 'admin'>('patient'); // Swapped admin and hospital
+  const [hospitalId, setHospitalId] = useState<string>('');
+  const [hospitalName, setHospitalName] = useState<string>('');
+  const [hospitalPhone, setHospitalPhone] = useState<string>('');
+  const [loginType, setLoginType] = useState<'patient' | 'hospital' | 'admin'>('patient');
   const [isSignup, setIsSignup] = useState<boolean>(false);
 
   const { login, signup, loading, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || 
-    (loginType === 'hospital' ? '/hospital-dashboard' : // Swapped admin to hospital
-     loginType === 'admin' ? '/admin' : '/patient-dashboard'); // Swapped hospital to admin
+  const from = location.state?.from?.pathname ||
+    (loginType === 'hospital' ? '/hospital-dashboard' :
+      loginType === 'admin' ? '/admin' : '/patient-dashboard');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +39,7 @@ const Login: React.FC = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password || !email || (loginType === 'hospital' && !employeeId)) return; // Swapped admin to hospital
+    if (!username || !password || !email || (loginType === 'hospital' && !employeeId)) return;
 
     const diseasesArray = diseases ? diseases.split(',').map(d => d.trim()) : [];
     const ageNumber = age ? parseInt(age) : undefined;
@@ -53,18 +53,18 @@ const Login: React.FC = () => {
       loginType === 'patient' ? (gender || undefined) : undefined,
       loginType === 'patient' ? ageNumber : undefined,
       loginType === 'patient' && diseasesArray.length > 0 ? diseasesArray : undefined,
-      loginType === 'hospital' ? employeeId : undefined, // Swapped admin to hospital
-      loginType === 'hospital' ? staffDepartment || undefined : undefined, // Swapped admin to hospital
-      loginType === 'admin' ? hospitalId : undefined, // Swapped hospital to admin
-      loginType === 'admin' ? hospitalName || undefined : undefined, // Swapped hospital to admin
-      loginType === 'admin' ? hospitalPhone || undefined : undefined // Swapped hospital to admin
+      loginType === 'hospital' ? employeeId : undefined,
+      loginType === 'hospital' ? staffDepartment || undefined : undefined,
+      loginType === 'admin' ? hospitalId : undefined,
+      loginType === 'admin' ? hospitalName || undefined : undefined,
+      loginType === 'admin' ? hospitalPhone || undefined : undefined
     );
     if (success) {
       navigate(from, { replace: true });
     }
   };
 
-  const toggleLoginType = (type: 'patient' | 'hospital' | 'admin') => { // Swapped admin and hospital
+  const toggleLoginType = (type: 'patient' | 'hospital' | 'admin') => {
     setLoginType(type);
     setUsername('');
     setPassword('');
@@ -75,9 +75,9 @@ const Login: React.FC = () => {
     setDiseases('');
     setEmployeeId('');
     setStaffDepartment('');
-    setHospitalId(''); // Added
-    setHospitalName(''); // Added
-    setHospitalPhone(''); // Added
+    setHospitalId('');
+    setHospitalName('');
+    setHospitalPhone('');
   };
 
   const toggleAuthMode = () => {
@@ -91,67 +91,53 @@ const Login: React.FC = () => {
     setDiseases('');
     setEmployeeId('');
     setStaffDepartment('');
-    setHospitalId(''); // Added
-    setHospitalName(''); // Added
-    setHospitalPhone(''); // Added
+    setHospitalId('');
+    setHospitalName('');
+    setHospitalPhone('');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-2xl transform transition-all duration-500 hover:shadow-3xl">
+        {/* Header Section */}
         <div className="text-center">
           <div className="flex justify-center">
-            <Activity className="h-12 w-12 text-blue-600" />
+            <Activity className="h-12 w-12 text-blue-600 animate-pulse" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">MediQueue</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            {isSignup 
-              ? (loginType === 'patient' ? 'Patient Registration' : 
-                 loginType === 'hospital' ? 'Hospital Registration' : 'Staff Registration') // Swapped admin to hospital, hospital to admin
-              : (loginType === 'patient' ? 'Patient Portal Login' : 
-                 loginType === 'hospital' ? 'Hospital Portal Login' : 'Staff Portal Login') // Swapped admin to hospital, hospital to admin
+          <h2 className="mt-6 text-4xl font-extrabold text-gray-900 tracking-tight">
+            MediQueue
+          </h2>
+          <p className="mt-2 text-sm text-gray-500 font-medium">
+            {isSignup
+              ? (loginType === 'patient' ? 'Patient Registration' :
+                loginType === 'hospital' ? 'Admin Registration' : 'Staff Registration') // Changed "Hospital" to "Admin"
+              : (loginType === 'patient' ? 'Patient Portal Login' :
+                loginType === 'hospital' ? 'Admin Portal Login' : 'Staff Portal Login') // Changed "Hospital" to "Admin"
             }
           </p>
         </div>
 
-        <div className="flex justify-center space-x-4 mt-4">
-          <button
-            type="button"
-            onClick={() => toggleLoginType('patient')}
-            className={`px-4 py-2 rounded-md ${
-              loginType === 'patient'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Patient
-          </button>
-          <button
-            type="button"
-            onClick={() => toggleLoginType('hospital')} // Swapped admin to hospital
-            className={`px-4 py-2 rounded-md ${
-              loginType === 'hospital'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Hospital
-          </button>
-          <button
-            type="button"
-            onClick={() => toggleLoginType('admin')} // Swapped hospital to admin
-            className={`px-4 py-2 rounded-md ${
-              loginType === 'admin'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Staff
-          </button>
+        {/* Role Selection Buttons */}
+        <div className="flex justify-center space-x-4 mt-6">
+          {['patient', 'hospital', 'admin'].map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => toggleLoginType(type as 'patient' | 'hospital' | 'admin')}
+              className={`px-4 py-2 rounded-full font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${loginType === type
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+            >
+              {type === 'patient' ? 'Patient' : type === 'hospital' ? 'Admin' : 'Staff'} {/* Changed "Hospital" to "Admin" */}
+            </button>
+          ))}
         </div>
 
+        {/* Form */}
         <form className="mt-8 space-y-6" onSubmit={isSignup ? handleSignup : handleLogin}>
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="space-y-4">
+            {/* Username Field */}
             <div>
               <label htmlFor="username" className="sr-only">Username</label>
               <div className="relative">
@@ -165,11 +151,13 @@ const Login: React.FC = () => {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
                   placeholder="Username"
                 />
               </div>
             </div>
+
+            {/* Email Field (Signup Only) */}
             {isSignup && (
               <>
                 <div>
@@ -185,11 +173,13 @@ const Login: React.FC = () => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                      className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
                       placeholder="Email"
                     />
                   </div>
                 </div>
+
+                {/* Patient-Specific Fields */}
                 {loginType === 'patient' && (
                   <>
                     <div>
@@ -204,7 +194,7 @@ const Login: React.FC = () => {
                           type="tel"
                           value={phoneNumber}
                           onChange={(e) => setPhoneNumber(e.target.value)}
-                          className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                          className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
                           placeholder="Phone Number (optional)"
                         />
                       </div>
@@ -220,7 +210,7 @@ const Login: React.FC = () => {
                           name="gender"
                           value={gender}
                           onChange={(e) => setGender(e.target.value as 'male' | 'female' | 'other' | '')}
-                          className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                          className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
                         >
                           <option value="">Select Gender (optional)</option>
                           <option value="male">Male</option>
@@ -242,7 +232,7 @@ const Login: React.FC = () => {
                           min="1"
                           value={age}
                           onChange={(e) => setAge(e.target.value)}
-                          className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                          className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
                           placeholder="Age (optional)"
                         />
                       </div>
@@ -259,17 +249,19 @@ const Login: React.FC = () => {
                           type="text"
                           value={diseases}
                           onChange={(e) => setDiseases(e.target.value)}
-                          className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                          className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
                           placeholder="Diseases (comma-separated, optional)"
                         />
                       </div>
                     </div>
                   </>
                 )}
-                {loginType === 'hospital' && ( // Swapped admin to hospital
+
+                {/* Admin-Specific Fields (Previously Hospital) */}
+                {loginType === 'hospital' && (
                   <>
                     <div>
-                      <label htmlFor="employeeId" className="sr-only">Employee ID</label>
+                      <label htmlFor="employeeId" className="sr-only">Admin ID</label> {/* Changed "Employee ID" to "Admin ID" */}
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <Briefcase className="h-5 w-5 text-gray-400" />
@@ -281,8 +273,8 @@ const Login: React.FC = () => {
                           required
                           value={employeeId}
                           onChange={(e) => setEmployeeId(e.target.value)}
-                          className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                          placeholder="Employee ID"
+                          className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
+                          placeholder="Admin ID" // Changed "Employee ID" to "Admin ID"
                         />
                       </div>
                     </div>
@@ -298,17 +290,19 @@ const Login: React.FC = () => {
                           type="text"
                           value={staffDepartment}
                           onChange={(e) => setStaffDepartment(e.target.value)}
-                          className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                          className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
                           placeholder="Department (optional)"
                         />
                       </div>
                     </div>
                   </>
                 )}
-                {loginType === 'admin' && ( // Swapped hospital to admin
+
+                {/* Staff-Specific Fields (Previously Admin) */}
+                {loginType === 'admin' && (
                   <>
                     <div>
-                      <label htmlFor="hospitalId" className="sr-only">Admin ID</label>
+                      <label htmlFor="hospitalId" className="sr-only">Staff ID</label> {/* Changed "Admin ID" to "Staff ID" */}
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <Building className="h-5 w-5 text-gray-400" />
@@ -320,13 +314,13 @@ const Login: React.FC = () => {
                           required
                           value={hospitalId}
                           onChange={(e) => setHospitalId(e.target.value)}
-                          className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                          placeholder="Admin ID"
+                          className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
+                          placeholder="Staff ID" // Changed "Admin ID" to "Staff ID"
                         />
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="hospitalName" className="sr-only">Admin Name</label>
+                      <label htmlFor="hospitalName" className="sr-only">Staff Name</label> {/* Changed "Admin Name" to "Staff Name" */}
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <Building className="h-5 w-5 text-gray-400" />
@@ -337,13 +331,13 @@ const Login: React.FC = () => {
                           type="text"
                           value={hospitalName}
                           onChange={(e) => setHospitalName(e.target.value)}
-                          className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                          placeholder="Admin Name (optional)"
+                          className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
+                          placeholder="Staff Name (optional)" // Changed "Admin Name" to "Staff Name"
                         />
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="hospitalPhone" className="sr-only">Admin Phone</label>
+                      <label htmlFor="hospitalPhone" className="sr-only">Staff Phone</label> {/* Changed "Admin Phone" to "Staff Phone" */}
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <Phone className="h-5 w-5 text-gray-400" />
@@ -354,8 +348,8 @@ const Login: React.FC = () => {
                           type="tel"
                           value={hospitalPhone}
                           onChange={(e) => setHospitalPhone(e.target.value)}
-                          className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                          placeholder="Admin Phone (optional)"
+                          className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
+                          placeholder="Staff Phone (optional)" // Changed "Admin Phone" to "Staff Phone"
                         />
                       </div>
                     </div>
@@ -363,6 +357,8 @@ const Login: React.FC = () => {
                 )}
               </>
             )}
+
+            {/* Password Field */}
             <div>
               <label htmlFor="password" className="sr-only">Password</label>
               <div className="relative">
@@ -376,61 +372,112 @@ const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 sm:text-sm"
                   placeholder="Password"
                 />
               </div>
             </div>
           </div>
 
+          {/* Error Message */}
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg animate-fade-in" role="alert">
               <span className="block sm:inline">{error}</span>
             </div>
           )}
 
+          {/* Submit Button */}
           <div>
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400"
+              className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 transition-all duration-300 transform hover:scale-105 ${loading ? 'animate-pulse' : ''
+                }`}
             >
               <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                 {isSignup ? (
-                  <UserPlus className="h-5 w-5 text-blue-500 group-hover:text-blue-400" />
+                  <UserPlus className="h-5 w-5 text-blue-200 group-hover:text-blue-300 transition-colors duration-300" />
                 ) : (
-                  <LogIn className="h-5 w-5 text-blue-500 group-hover:text-blue-400" />
+                  <LogIn className="h-5 w-5 text-blue-200 group-hover:text-blue-300 transition-colors duration-300" />
                 )}
               </span>
-              {loading ? (isSignup ? 'Registering...' : 'Logging in...') : (isSignup ? 'Sign up' : 'Sign in')}
+              {loading ? (isSignup ? 'Registering...' : 'Logging in...') : (isSignup ? 'Sign Up' : 'Sign In')}
             </button>
           </div>
 
+          {/* Toggle Auth Mode */}
           <div className="text-center text-sm">
             <button
               type="button"
               onClick={toggleAuthMode}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-300"
             >
               {isSignup ? 'Already have an account? Login' : "Don't have an account? Sign up"}
             </button>
           </div>
 
+          {/* Demo Credentials */}
           {!isSignup && (
-            <div className="text-center text-sm">
-              <p className="text-gray-600">
+            <div className="text-center text-sm bg-gray-50 p-3 rounded-lg">
+              <p className="text-gray-600 font-medium">
                 {loginType === 'patient' ? (
-                  <>For demo, use: <span className="font-semibold">patient / patient123</span></>
-                ) : loginType === 'hospital' ? ( // Swapped admin to hospital
-                  <>For demo, use: <span className="font-semibold">hospital / hospital123</span></>
+                  <>For demo, use: <span className="font-semibold text-blue-600">patient / patient123</span></>
+                ) : loginType === 'hospital' ? (
+                  <>For demo, use: <span className="font-semibold text-blue-600">admin / admin123</span></> // Changed "hospital / hospital123" to "admin / admin123"
                 ) : (
-                  <>For demo, use: <span className="font-semibold">admin / admin123</span></> // Swapped hospital to admin
+                  <>For demo, use: <span className="font-semibold text-blue-600">staff / staff123</span></> // Changed "admin / admin123" to "staff / staff123"
                 )}
               </p>
             </div>
           )}
         </form>
       </div>
+
+      {/* Custom CSS for Animations and Styling */}
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes pulse {
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .animate-pulse {
+          animation: pulse 1.5s infinite;
+        }
+
+        .shadow-3xl {
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        input:focus, select:focus {
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        button:disabled {
+          cursor: not-allowed;
+        }
+      `}</style>
     </div>
   );
 };
