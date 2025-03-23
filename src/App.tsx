@@ -4,7 +4,7 @@ import { QueueProvider } from './context/QueueContext';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import { HomePage } from './components/LandingPage'; // Removed GetStartedPage import
+import { HomePage } from './components/LandingPage';
 import PatientDashboard from './components/PatientDashboard';
 import StaffPanel from './components/StaffPanel';
 import LiveQueue from './components/LiveQueue';
@@ -18,6 +18,9 @@ import HospitalDashboard from './components/HospitalDashboard';
 import HospitalStaffManagement from './components/HospitalStaffManagement';
 import HospitalQueue from './components/HospitalQueue';
 import HospitalReports from './components/HospitalReports';
+import HospitalDetails from './components/HospitalDetails';
+import VirtualRooms from './components/VirtualRooms';
+import VideoChatPage from './components/VideoChatPage'; // Import the new VideoChatPage
 
 function App() {
   return (
@@ -30,7 +33,6 @@ function App() {
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <Routes>
                   <Route path="/" element={<HomePage />} />
-                  {/* Removed the /get-started route */}
                   <Route path="/login" element={<Login />} />
                   <Route 
                     path="/admin" 
@@ -115,12 +117,35 @@ function App() {
                   <Route 
                     path="/hospital-reports" 
                     element={
-                      <ProtectedRoute requireHospital={true}>
+                      <ProtectedRoute requireAdminOrHospital={true}>
                         <HospitalReports />
                       </ProtectedRoute>
                     } 
                   />
-                  <Route path="/about" element={<div>About Page (Coming Soon)</div>} />
+                  <Route 
+                    path="/hospital-details/:id" 
+                    element={
+                      <ProtectedRoute requireAdminOrHospital={true}>
+                        <HospitalDetails />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/virtual-rooms" 
+                    element={
+                      <ProtectedRoute>
+                        <VirtualRooms />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/video-chat/:roomId" 
+                    element={
+                      <ProtectedRoute>
+                        <VideoChatPage />
+                      </ProtectedRoute>
+                    } 
+                  />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>

@@ -18,8 +18,6 @@ const Navbar: React.FC = () => {
         return '/hospital-dashboard';
       case 'admin':
         return '/admin';
-      case 'staff':
-        return '/staff-dashboard'; // Added staff dashboard path
       default:
         return '/';
     }
@@ -44,7 +42,6 @@ const Navbar: React.FC = () => {
               </Link>
               {user && (
                 <>
-                  {/* Add Dashboard link for all authenticated users */}
                   <Link
                     to={getDashboardPath()}
                     className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
@@ -55,23 +52,38 @@ const Navbar: React.FC = () => {
                   >
                     Dashboard
                   </Link>
-                  <Link
-                    to="/queue"
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                      location.pathname === '/queue' ? 'border-white' : 'border-transparent hover:border-gray-300'
-                    }`}
-                  >
-                    Live Queue
-                  </Link>
-                  {(user.role === 'admin' || user.role === 'staff') && (
+                  {/* Conditionally render links based on user role */}
+                  {user.role === 'patient' && (
+                    <Link
+                      to="/queue"
+                      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                        location.pathname === '/queue' ? 'border-white' : 'border-transparent hover:border-gray-300'
+                      }`}
+                    >
+                      Live Queue
+                    </Link>
+                  )}
+                  {user.role === 'hospital' && (
+                    <Link
+                      to="/hospital-reports"
+                      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                        location.pathname === '/hospital-reports'
+                          ? 'border-white'
+                          : 'border-transparent hover:border-gray-300'
+                      }`}
+                    >
+                      Hospital Reports
+                    </Link>
+                  )}
+                  {user.role === 'admin' && (
                     <>
                       <Link
-                        to="/admin"
+                        to="/queue"
                         className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                          location.pathname === '/admin' ? 'border-white' : 'border-transparent hover:border-gray-300'
+                          location.pathname === '/queue' ? 'border-white' : 'border-transparent hover:border-gray-300'
                         }`}
                       >
-                        Staff Panel
+                        Live Queue
                       </Link>
                       <Link
                         to="/analytics"
@@ -80,6 +92,14 @@ const Navbar: React.FC = () => {
                         }`}
                       >
                         Analytics
+                      </Link>
+                      <Link
+                        to="/ai-predictions"
+                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                          location.pathname === '/ai-predictions' ? 'border-white' : 'border-transparent hover:border-gray-300'
+                        }`}
+                      >
+                        AI Predictions
                       </Link>
                     </>
                   )}
@@ -90,9 +110,7 @@ const Navbar: React.FC = () => {
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {user ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm">
-                  {user.username} ({user.role})
-                </span>
+                <span className="text-sm">{user.username}</span>
                 <button
                   onClick={() => {
                     console.log('Logout clicked'); // Debug log

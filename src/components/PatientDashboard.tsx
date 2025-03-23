@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Users, RefreshCw, Calendar, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import Chatbot from './Chatbot.tsx'; // Added .tsx extension
-import Modals from './Modals.tsx';   // Added .tsx extension
+import { useNavigate } from 'react-router-dom';
+import Chatbot from './Chatbot.tsx';
+import Modals from './Modals.tsx';
 
 // Mock data
 const mockPatients = [
@@ -31,7 +32,8 @@ const mockDepartments = [
   { id: '2', name: 'General', currentLoad: 50, averageWaitTime: 30, patientsWaiting: 2 },
 ];
 
-// ... (rest of the file remains unchanged)
+const mockHospitals = ['City Hospital', 'Green Valley Medical Center', 'Sunrise Clinic', 'Metro Health'];
+const mockConsultancyTypes = ['In-Person', 'Telemedicine'];
 
 interface Patient {
   id: string;
@@ -66,48 +68,42 @@ const PatientDashboard: React.FC = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [appointmentForm, setAppointmentForm] = useState({
     department: '',
+    hospital: '',
+    consultancyType: '',
     date: '',
     time: '',
-    reason: ''
+    reason: '',
   });
   const [appointments, setAppointments] = useState<any[]>([
-    user.patientId === '1' ? [
-      {
-        id: 'appt1',
-        patientId: '1',
-        patientName: 'John Smith',
-        department: 'General',
-        date: '2025-03-04',
-        time: '10:20',
-        reason: 'hello',
-        status: 'scheduled',
-        createdAt: new Date('2025-03-04T07:10:00').toISOString(),
-      },
-    ] : [],
+    user.patientId === '1'
+      ? [
+          {
+            id: 'appt1',
+            patientId: '1',
+            patientName: 'John Smith',
+            department: 'General',
+            hospital: 'City Hospital',
+            consultancyType: 'In-Person',
+            date: '2025-03-04',
+            time: '10:20',
+            reason: 'hello',
+            status: 'scheduled',
+            createdAt: new Date('2025-03-04T07:10:00').toISOString(),
+          },
+        ]
+      : [],
   ]);
   const [hasBookedAppointment, setHasBookedAppointment] = useState(false);
   const [cancelSuccess, setCancelSuccess] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const initialAppointments = user.patientId === '1' ? [
-      {
-        id: 'appt1',
-        patientId: '1',
-        patientName: 'John Smith',
-        department: 'General',
-        date: '2025-03-04',
-        time: '10:20',
-        reason: 'hello',
-        status: 'scheduled',
-        createdAt: new Date('2025-03-04T07:10:00').toISOString(),
-      },
-    ] : [];
-    setAppointments(initialAppointments);
-    setHasBookedAppointment(initialAppointments.length > 0);
+    const activeAppointments = appointments.filter((apt) => apt.status !== 'cancelled');
+    setHasBookedAppointment(activeAppointments.length > 0);
 
-    if (user?.role === 'patient' && user?.patientId && hasBookedAppointment) {
-      const patient = patients.find(p => p.id === user.patientId);
+    if (user?.role === 'patient' && user?.patientId && activeAppointments.length > 0) {
+      const patient = patients.find((p) => p.id === user.patientId);
       if (patient) {
         let updatedPatient = { ...patient };
         if (patient.department === 'Emergency') {
@@ -122,8 +118,10 @@ const PatientDashboard: React.FC = () => {
         setCurrentPatient(updatedPatient);
         setSearchResult({ patient: updatedPatient });
       }
+    } else {
+      setCurrentPatient(null);
     }
-  }, [user, patients, hasBookedAppointment]);
+  }, [user, patients, appointments]);
 
   useEffect(() => {
     if (cancelSuccess) {
@@ -137,8 +135,8 @@ const PatientDashboard: React.FC = () => {
       setSearchResult({ error: 'Please enter a patient ID' });
       return;
     }
-    
-    const patient = patients.find(p => p.id === patientId);
+
+    const patient = patients.find((p) => p.id === patientId);
     if (patient && hasBookedAppointment) {
       let updatedPatient = { ...patient };
       if (patient.department === 'Emergency') {
@@ -158,40 +156,65 @@ const PatientDashboard: React.FC = () => {
 
   const handleAppointmentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (
+      !appointmentForm.department ||
+      !appointmentForm.hospital ||
+      !appointmentForm.consultancyType ||
+      !appointmentForm.date ||
+      !appointmentForm.time ||
+      !appointmentForm.reason
+    ) {
+      alert('Please fill in all fields');
+      return;
+    }
+
     const newAppointment = {
       id: Date.now().toString(),
       patientId: user?.patientId || patientId,
       patientName: user.name,
-      ...appointmentForm,
+      department: appointmentForm.department,
+      hospital: appointmentForm.hospital,
+      consultancyType: appointmentForm.consultancyType,
+      date: appointmentForm.date,
+      time: appointmentForm.time,
+      reason: appointmentForm.reason,
       status: 'scheduled',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
-    
-    const updatedPatients = patients.map(p => 
-      p.id === user.patientId 
-        ? { 
-            ...p, 
+
+    const updatedPatients = patients.map((p) =>
+      p.id === user.patientId
+        ? {
+            ...p,
             department: newAppointment.department,
             priority: newAppointment.department === 'Emergency' ? 'emergency' : 'medium',
             status: 'waiting',
             estimatedWaitTime: newAppointment.department === 'Emergency' ? 5 : 30,
-            queuePosition: newAppointment.department === 'Emergency' ? 1 : 2,
+            queuePosition: newAppointment.department === 'Emergency' ? 1 : patients.filter((pt) => pt.department === newAppointment.department && pt.status === 'waiting').length + 1,
           }
         : p
     );
     setPatients(updatedPatients);
 
-    setAppointments(prevAppointments => [...prevAppointments, newAppointment]);
+    setAppointments((prevAppointments) => [...prevAppointments, newAppointment]);
     console.log('Appointment booked:', newAppointment);
     setIsAppointmentModalOpen(false);
-    setAppointmentForm({ department: '', date: '', time: '', reason: '' });
+    setAppointmentForm({ department: '', hospital: '', consultancyType: '', date: '', time: '', reason: '' });
     setHasBookedAppointment(true);
+
+    const updatedDepartments = departments.map((dept) =>
+      dept.name === newAppointment.department
+        ? { ...dept, patientsWaiting: dept.patientsWaiting + 1 }
+        : dept
+    );
+    setDepartments(updatedDepartments);
   };
 
   const handleCancelAppointment = (appointmentId: string) => {
     if (window.confirm('Are you sure you want to cancel this appointment?')) {
       console.log('Attempting to cancel appointment with ID:', appointmentId);
-      const updatedAppointments = appointments.filter(apt => apt.id !== appointmentId);
+      const appointmentToCancel = appointments.find((apt) => apt.id === appointmentId);
+      const updatedAppointments = appointments.filter((apt) => apt.id !== appointmentId);
       console.log('Updated appointments after cancellation:', updatedAppointments);
 
       const newHasBookedAppointment = updatedAppointments.length > 0;
@@ -199,10 +222,10 @@ const PatientDashboard: React.FC = () => {
 
       let updatedPatients = [...patients];
       if (!newHasBookedAppointment && user.patientId) {
-        updatedPatients = patients.map(p => 
-          p.id === user.patientId 
-            ? { 
-                ...p, 
+        updatedPatients = patients.map((p) =>
+          p.id === user.patientId
+            ? {
+                ...p,
                 department: '',
                 priority: '' as Priority,
                 status: '',
@@ -211,6 +234,30 @@ const PatientDashboard: React.FC = () => {
               }
             : p
         );
+      } else {
+        const canceledPatient = patients.find((p) => p.id === user.patientId);
+        if (canceledPatient && canceledPatient.department) {
+          const remainingPatientsInDept = patients
+            .filter((p) => p.department === canceledPatient.department && p.status === 'waiting' && p.id !== user.patientId)
+            .sort((a, b) => (a.queuePosition || 0) - (b.queuePosition || 0));
+          updatedPatients = patients.map((p) => {
+            if (p.department === canceledPatient.department && p.status === 'waiting' && p.id !== user.patientId) {
+              const newPosition = remainingPatientsInDept.findIndex((pt) => pt.id === p.id) + 1;
+              return { ...p, queuePosition: newPosition };
+            }
+            if (p.id === user.patientId) {
+              return {
+                ...p,
+                department: '',
+                priority: '' as Priority,
+                status: '',
+                estimatedWaitTime: undefined,
+                queuePosition: undefined,
+              };
+            }
+            return p;
+          });
+        }
       }
       setPatients(updatedPatients);
       setAppointments(updatedAppointments);
@@ -218,33 +265,63 @@ const PatientDashboard: React.FC = () => {
       setSearchResult(null);
       setCancelSuccess('Appointment canceled successfully!');
       console.log('Patient queue status after cancellation:', updatedPatients);
+
+      if (appointmentToCancel) {
+        const updatedDepartments = departments.map((dept) =>
+          dept.name === appointmentToCancel.department
+            ? { ...dept, patientsWaiting: Math.max(0, dept.patientsWaiting - 1) }
+            : dept
+        );
+        setDepartments(updatedDepartments);
+      }
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'waiting': return 'bg-yellow-100 text-yellow-800';
-      case 'in-progress': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'scheduled': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'waiting':
+        return 'bg-yellow-200 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-200';
+      case 'in-progress':
+        return 'bg-blue-200 text-blue-800 dark:bg-blue-700 dark:text-blue-200';
+      case 'completed':
+        return 'bg-green-200 text-green-800 dark:bg-green-700 dark:text-green-200';
+      case 'cancelled':
+        return 'bg-red-200 text-red-800 dark:bg-red-700 dark:text-red-200';
+      case 'scheduled':
+        return 'bg-purple-200 text-purple-800 dark:bg-purple-700 dark:text-purple-200';
+      default:
+        return 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
   };
 
   const getPriorityColor = (priority: Priority) => {
     switch (priority) {
-      case 'low': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-blue-100 text-blue-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'emergency': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'low':
+        return 'bg-green-200 text-green-800 dark:bg-green-700 dark:text-green-200';
+      case 'medium':
+        return 'bg-blue-200 text-blue-800 dark:bg-blue-700 dark:text-blue-200';
+      case 'high':
+        return 'bg-orange-200 text-orange-800 dark:bg-orange-700 dark:text-orange-200';
+      case 'emergency':
+        return 'bg-red-200 text-red-800 dark:bg-red-700 dark:text-red-200';
+      default:
+        return 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
   };
 
   const handleSignOut = () => {
     console.log('User signed out');
-    setUser({ role: '', name: '', patientId: '', email: '', phoneNumber: '', gender: '', age: 0, diseases: [], avatarUrl: '' });
+    setUser({
+      role: '',
+      name: '',
+      patientId: '',
+      email: '',
+      phoneNumber: '',
+      gender: '',
+      age: 0,
+      diseases: [],
+      avatarUrl: '',
+    });
     setIsProfileModalOpen(false);
   };
 
@@ -256,80 +333,375 @@ const PatientDashboard: React.FC = () => {
     return name[0]?.toUpperCase() || '';
   };
 
+  // Function to navigate to Virtual Rooms
+  const handleVirtualRooms = () => {
+    navigate('/virtual-rooms');
+  };
+
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold text-gray-800 flex items-center">
-            <svg className="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
-            MediQueue
-          </h1>
-          <nav className="flex space-x-4">
-            <a href="#" className="text-gray-600 hover:text-blue-600">Dashboard</a>
-            <a href="#" className="text-gray-600 hover:text-blue-600">Live Queue</a>
-          </nav>
+    <div className="min-h-screen p-4 md:p-6 transition-colors duration-300 bg-gray-100">
+      <div
+        className={`transition-all duration-300 ${
+          isAppointmentModalOpen || isProfileModalOpen || isChatOpen ? 'blur-sm' : ''
+        }`}
+      >
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-3xl font-bold flex items-center text-gray-800 dark:text-gray-100">
+              <svg
+                className="h-8 w-8 text-blue-600 dark:text-blue-400 mr-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              MediQueue
+            </h1>
+            <nav className="flex space-x-6">
+              <a
+                href="#"
+                className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 font-medium"
+              >
+                Dashboard
+              </a>
+            </nav>
+          </div>
+          <div className="flex gap-3 items-center">
+            <button
+              onClick={() => setIsAppointmentModalOpen(true)}
+              className="flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg shadow-md hover:from-green-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105"
+            >
+              <Calendar size={18} className="mr-2" />
+              Book Appointment
+            </button>
+            <button
+              onClick={() => {
+                setPatients([...mockPatients]);
+                setDepartments([...mockDepartments]);
+              }}
+              className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg shadow-md hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 transform hover:scale-105"
+            >
+              <RefreshCw size={18} className="mr-2" />
+              Refresh
+            </button>
+            <button
+              onClick={handleVirtualRooms}
+              className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-lg shadow-md hover:from-purple-600 hover:to-violet-600 transition-all duration-300 transform hover:scale-105"
+            >
+              Virtual Rooms
+            </button>
+            <button
+              onClick={() => setIsProfileModalOpen(true)}
+              className="flex items-center transform hover:scale-105 transition-transform duration-200"
+            >
+              {user.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt="Patient Avatar"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-blue-500 dark:border-blue-400 shadow-md"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center text-white font-semibold text-lg border-2 border-blue-500 dark:border-blue-400 shadow-md">
+                  {getInitials(user.name)}
+                </div>
+              )}
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2 items-center">
-          <button 
-            onClick={() => setIsAppointmentModalOpen(true)}
-            className="flex items-center px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-          >
-            <Calendar size={16} className="mr-2" />
-            Book Appointment
-          </button>
-          <button 
-            onClick={() => {
-              setPatients([...mockPatients]);
-              setDepartments([...mockDepartments]);
-            }}
-            className="flex items-center px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-          >
-            <RefreshCw size={16} className="mr-2" />
-            Refresh
-          </button>
-          <button 
-            onClick={() => setIsProfileModalOpen(true)}
-            className="flex items-center"
-          >
-            {user.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt="Patient Avatar"
-                className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold border-2 border-gray-300">
-                {getInitials(user.name)}
+
+        {cancelSuccess && (
+          <div className="mb-6 p-4 bg-green-100 dark:bg-green-800 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-200 rounded-lg shadow-md animate-fade-in">
+            {cancelSuccess}
+          </div>
+        )}
+
+        {hasBookedAppointment && user.patientId === '1' && currentPatient && (
+          <>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 transform hover:shadow-xl transition-shadow duration-300">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Your Queue Status</h2>
+              <div className="bg-gray-50 dark:bg-gray-700 p-5 rounded-lg">
+                <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-200">{currentPatient.name}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-300">
+                      Department: <span className="font-medium">{currentPatient.department}</span>
+                    </p>
+                    <p className="text-gray-600 dark:text-gray-300">
+                      Status:
+                      <span
+                        className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                          currentPatient.status
+                        )}`}
+                      >
+                        {currentPatient.status.replace('-', ' ')}
+                      </span>
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-300">
+                      Priority:
+                      <span
+                        className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(
+                          currentPatient.priority
+                        )}`}
+                      >
+                        {currentPatient.priority}
+                      </span>
+                    </p>
+                    {currentPatient.status === 'waiting' && currentPatient.department !== 'Emergency' && (
+                      <>
+                        <p className="text-gray-600 dark:text-gray-300">
+                          Queue Position: <span className="font-medium">{currentPatient.queuePosition}</span>
+                        </p>
+                        <p className="text-gray-600 dark:text-gray-300">
+                          Estimated Wait: <span className="font-medium">{currentPatient.estimatedWaitTime} minutes</span>
+                        </p>
+                      </>
+                    )}
+                    {currentPatient.department === 'Emergency' && (
+                      <p className="text-gray-600 dark:text-gray-300">
+                        Estimated Wait:{' '}
+                        <span className="font-medium">
+                          {currentPatient.estimatedWaitTime || 5} minutes or less (priority emergency)
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {!currentPatient && user.patientId === '1' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 transform hover:shadow-xl transition-shadow duration-300">
+                <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Find Your Queue Status</h2>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <input
+                    type="text"
+                    placeholder="Enter your Patient ID"
+                    value={patientId}
+                    onChange={(e) => setPatientId(e.target.value)}
+                    className="flex-grow px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition-all duration-200"
+                  />
+                  <button
+                    onClick={handleSearch}
+                    className="px-5 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg shadow-md hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 transform hover:scale-105"
+                  >
+                    Check Status
+                  </button>
+                </div>
+
+                {searchResult && !currentPatient && (
+                  <div className="mt-5">
+                    {searchResult.error ? (
+                      <p className="text-red-500 dark:text-red-400">{searchResult.error}</p>
+                    ) : (
+                      <div className="bg-gray-50 dark:bg-gray-700 p-5 rounded-lg">
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-200">
+                          {searchResult.patient.name}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-300">
+                              Department: <span className="font-medium">{searchResult.patient.department}</span>
+                            </p>
+                            <p className="text-gray-600 dark:text-gray-300">
+                              Status:
+                              <span
+                                className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                                  searchResult.patient.status
+                                )}`}
+                              >
+                                {searchResult.patient.status.replace('-', ' ')}
+                              </span>
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-300">
+                              Priority:
+                              <span
+                                className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(
+                                  searchResult.patient.priority
+                                )}`}
+                              >
+                                {searchResult.patient.priority}
+                              </span>
+                            </p>
+                            {searchResult.patient.status === 'waiting' &&
+                              searchResult.patient.department !== 'Emergency' && (
+                                <>
+                                  <p className="text-gray-600 dark:text-gray-300">
+                                    Queue Position:{' '}
+                                    <span className="font-medium">{searchResult.patient.queuePosition}</span>
+                                  </p>
+                                  <p className="text-gray-600 dark:text-gray-300">
+                                    Estimated Wait:{' '}
+                                    <span className="font-medium">{searchResult.patient.estimatedWaitTime} minutes</span>
+                                  </p>
+                                </>
+                              )}
+                            {searchResult.patient.department === 'Emergency' && (
+                              <p className="text-gray-600 dark:text-gray-300">
+                                Estimated Wait:{' '}
+                                <span className="font-medium">
+                                  {searchResult.patient.estimatedWaitTime || 5} minutes or less (priority emergency)
+                                </span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
-          </button>
-        </div>
+
+            {(currentPatient || searchResult?.patient) && appointments.length > 0 && user.patientId === '1' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 transform hover:shadow-xl transition-shadow duration-300">
+                <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Your Appointments</h2>
+                <div className="space-y-4">
+                  {appointments
+                    .filter((apt) => apt.patientId === user.patientId && apt.status !== 'cancelled')
+                    .map((appointment) => (
+                      <div
+                        key={appointment.id}
+                        className="bg-gray-50 dark:bg-gray-700 p-5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-300">
+                              Department: <span className="font-medium">{appointment.department}</span>
+                            </p>
+                            <p className="text-gray-600 dark:text-gray-300">
+                              Hospital: <span className="font-medium">{appointment.hospital}</span>
+                            </p>
+                            <p className="text-gray-600 dark:text-gray-300">
+                              Consultancy Type: <span className="font-medium">{appointment.consultancyType}</span>
+                            </p>
+                            <p className="text-gray-600 dark:text-gray-300">
+                              Status:
+                              <span
+                                className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                                  appointment.status
+                                )}`}
+                              >
+                                {appointment.status}
+                              </span>
+                            </p>
+                            <p className="text-gray-600 dark:text-gray-300">
+                              Reason: <span className="font-medium">{appointment.reason}</span>
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-300">
+                              Date:{' '}
+                              <span className="font-medium">
+                                {format(new Date(appointment.date), 'MMMM dd, yyyy')}
+                              </span>
+                            </p>
+                            <p className="text-gray-600 dark:text-gray-300">
+                              Time: <span className="font-medium">{appointment.time}</span>
+                            </p>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">
+                              Booked:{' '}
+                              <span className="font-medium">
+                                {format(new Date(appointment.createdAt), 'MMM dd, yyyy HH:mm')}
+                              </span>
+                            </p>
+                            <button
+                              onClick={() => handleCancelAppointment(appointment.id)}
+                              className="mt-3 flex items-center px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105"
+                            >
+                              <Trash2 size={16} className="mr-2" />
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {user.patientId === '1' && (
+                <>
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transform hover:shadow-xl transition-shadow duration-300">
+                    <div className="flex items-center mb-4">
+                      <Users size={24} className="text-blue-500 dark:text-blue-400 mr-3" />
+                      <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Current Queue</h2>
+                    </div>
+                    <div className="text-4xl font-bold text-gray-800 dark:text-gray-100">
+                      {patients.filter((p) => p.status === 'waiting' && p.department).length}
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 mt-2">Patients waiting</p>
+                  </div>
+
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transform hover:shadow-xl transition-shadow duration-300">
+                    <div className="flex items-center mb-4">
+                      <Clock size={24} className="text-green-500 dark:text-green-400 mr-3" />
+                      <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Average Wait Time</h2>
+                    </div>
+                    <div className="text-4xl font-bold text-gray-800 dark:text-gray-100">
+                      {departments.length > 0
+                        ? `${Math.round(
+                            departments.reduce((acc, dept) => acc + dept.averageWaitTime, 0) / departments.length
+                          )} min`
+                        : 'N/A'}
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 mt-2">Across all departments</p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {user.patientId === '1' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 transform hover:shadow-xl transition-shadow duration-300">
+                <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Department Status</h2>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Department
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Avg. Wait Time
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Patients Waiting
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {departments.map((dept) => (
+                        <tr
+                          key={dept.id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
+                            {dept.name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                            {dept.averageWaitTime} min
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                            {dept.patientsWaiting}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
-      {/* Modals */}
-      <Modals
-        isAppointmentModalOpen={isAppointmentModalOpen}
-        setIsAppointmentModalOpen={setIsAppointmentModalOpen}
-        isProfileModalOpen={isProfileModalOpen}
-        setIsProfileModalOpen={setIsProfileModalOpen}
-        appointmentForm={appointmentForm}
-        setAppointmentForm={setAppointmentForm}
-        departments={departments}
-        user={user}
-        handleAppointmentSubmit={handleAppointmentSubmit}
-        handleSignOut={handleSignOut}
-      />
-
-      {/* Cancellation Success Message */}
-      {cancelSuccess && (
-        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
-          {cancelSuccess}
-        </div>
-      )}
-
-      {/* Chatbot */}
       <Chatbot
         isChatOpen={isChatOpen}
         setIsChatOpen={setIsChatOpen}
@@ -342,206 +714,20 @@ const PatientDashboard: React.FC = () => {
         searchResult={searchResult}
       />
 
-      {/* Queue Status and Other Sections */}
-      {hasBookedAppointment && user.patientId === '1' && (
-        <>
-          {currentPatient && (
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-              <h2 className="text-lg font-semibold mb-3">Your Queue Status</h2>
-              <div className="bg-gray-50 p-4 rounded-md">
-                <h3 className="font-semibold text-lg">{currentPatient.name}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                  <div>
-                    <p className="text-gray-600">Department: {currentPatient.department}</p>
-                    <p className="text-gray-600">
-                      Status: 
-                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(currentPatient.status)}`}>
-                        {currentPatient.status.replace('-', ' ')}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">
-                      Priority: 
-                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(currentPatient.priority)}`}>
-                        {currentPatient.priority}
-                      </span>
-                    </p>
-                    {currentPatient.status === 'waiting' && currentPatient.department !== 'Emergency' && (
-                      <>
-                        <p className="text-gray-600">Queue Position: {currentPatient.queuePosition}</p>
-                        <p className="text-gray-600">Estimated Wait: {currentPatient.estimatedWaitTime} minutes</p>
-                      </>
-                    )}
-                    {currentPatient.department === 'Emergency' && (
-                      <p className="text-gray-600">Estimated Wait: {currentPatient.estimatedWaitTime || 5} minutes or less (priority emergency)</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!currentPatient && user.patientId === '1' && (
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-              <h2 className="text-lg font-semibold mb-3">Find Your Queue Status</h2>
-              <div className="flex flex-col md:flex-row gap-3">
-                <input
-                  type="text"
-                  placeholder="Enter your Patient ID"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button 
-                  onClick={handleSearch}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                >
-                  Check Status
-                </button>
-              </div>
-
-              {searchResult && !currentPatient && (
-                <div className="mt-4">
-                  {searchResult.error ? (
-                    <p className="text-red-500">{searchResult.error}</p>
-                  ) : (
-                    <div className="bg-gray-50 p-4 rounded-md">
-                      <h3 className="font-semibold text-lg">{searchResult.patient.name}</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                        <div>
-                          <p className="text-gray-600">Department: {searchResult.patient.department}</p>
-                          <p className="text-gray-600">
-                            Status: 
-                            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(searchResult.patient.status)}`}>
-                              {searchResult.patient.status.replace('-', ' ')}
-                            </span>
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-gray-600">
-                            Priority: 
-                            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(searchResult.patient.priority)}`}>
-                              {searchResult.patient.priority}
-                            </span>
-                          </p>
-                          {searchResult.patient.status === 'waiting' && searchResult.patient.department !== 'Emergency' && (
-                            <>
-                              <p className="text-gray-600">Queue Position: {searchResult.patient.queuePosition}</p>
-                              <p className="text-gray-600">Estimated Wait: {searchResult.patient.estimatedWaitTime} minutes</p>
-                            </>
-                          )}
-                          {searchResult.patient.department === 'Emergency' && (
-                            <p className="text-gray-600">Estimated Wait: {searchResult.patient.estimatedWaitTime || 5} minutes or less (priority emergency)</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {(currentPatient || searchResult?.patient) && appointments.length > 0 && user.patientId === '1' && (
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-              <h2 className="text-lg font-semibold mb-4">Your Appointments</h2>
-              <div className="space-y-4">
-                {appointments
-                  .filter(apt => apt.patientId === user.patientId)
-                  .map((appointment) => (
-                    <div key={appointment.id} className="bg-gray-50 p-4 rounded-md">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-gray-600">Department: {appointment.department}</p>
-                          <p className="text-gray-600">
-                            Status: 
-                            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
-                              {appointment.status}
-                            </span>
-                          </p>
-                          <p className="text-gray-600">Reason: {appointment.reason}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-600">
-                            Date: {format(new Date(appointment.date), 'MMMM dd, yyyy')}
-                          </p>
-                          <p className="text-gray-600">Time: {appointment.time}</p>
-                          <p className="text-gray-600 text-sm">
-                            Booked: {format(new Date(appointment.createdAt), 'MMM dd, yyyy HH:mm')}
-                          </p>
-                          <button
-                            onClick={() => handleCancelAppointment(appointment.id)}
-                            className="mt-2 flex items-center px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm"
-                          >
-                            <Trash2 size={16} className="mr-1" />
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {user.patientId === '1' && (
-              <>
-                <div className="bg-white rounded-lg shadow-md p-4">
-                  <div className="flex items-center mb-3">
-                    <Users size={20} className="text-blue-500 mr-2" />
-                    <h2 className="text-lg font-semibold">Current Queue</h2>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-800">
-                    {patients.filter(p => p.status === 'waiting' && p.department).length}
-                  </div>
-                  <p className="text-gray-600">Patients waiting</p>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-md p-4">
-                  <div className="flex items-center mb-3">
-                    <Clock size={20} className="text-green-500 mr-2" />
-                    <h2 className="text-lg font-semibold">Average Wait Time</h2>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-800">
-                    {departments.length > 0 
-                      ? `${Math.round(departments.reduce((acc, dept) => acc + dept.averageWaitTime, 0) / departments.length)} min`
-                      : 'N/A'}
-                  </div>
-                  <p className="text-gray-600">Across all departments</p>
-                </div>
-              </>
-            )}
-          </div>
-
-          {user.patientId === '1' && (
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-              <h2 className="text-lg font-semibold mb-4">Department Status</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Wait Time</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patients Waiting</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {departments.map((dept) => (
-                      <tr key={dept.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{dept.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dept.averageWaitTime} min</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dept.patientsWaiting}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+      <Modals
+        isAppointmentModalOpen={isAppointmentModalOpen}
+        setIsAppointmentModalOpen={setIsAppointmentModalOpen}
+        isProfileModalOpen={isProfileModalOpen}
+        setIsProfileModalOpen={setIsProfileModalOpen}
+        appointmentForm={appointmentForm}
+        setAppointmentForm={setAppointmentForm}
+        departments={departments}
+        hospitals={mockHospitals}
+        consultancyTypes={mockConsultancyTypes}
+        user={user}
+        handleAppointmentSubmit={handleAppointmentSubmit}
+        handleSignOut={handleSignOut}
+      />
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 interface User {
   username: string;
-  role: 'patient' | 'hospital' | 'admin' | 'staff'; // Added 'staff' role
+  role: 'patient' | 'hospital' | 'admin';
   email?: string;
   phoneNumber?: string;
   gender?: 'male' | 'female' | 'other';
@@ -21,13 +21,12 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isHospital: boolean;
-  isStaff: boolean; // Added for staff role checks
-  login: (username: string, password: string, role: 'patient' | 'hospital' | 'admin' | 'staff') => Promise<boolean>;
+  login: (username: string, password: string, role: 'patient' | 'hospital' | 'admin') => Promise<boolean>;
   signup: (
     username: string,
     password: string,
     email: string,
-    role: 'patient' | 'hospital' | 'admin' | 'staff',
+    role: 'patient' | 'hospital' | 'admin',
     phoneNumber?: string,
     gender?: 'male' | 'female' | 'other',
     age?: number,
@@ -67,54 +66,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const demoUsers: User[] = [
     { username: 'patient', role: 'patient', email: 'patient@example.com' },
-    { username: 'hospital', role: 'hospital', email: 'hospital@example.com' }, // Renamed 'admin' to 'hospital' for clarity
-    { username: 'admin', role: 'admin', email: 'admin@example.com' }, // Added true admin user
-    { username: 'staff', role: 'staff', email: 'staff@example.com' }, // Fixed role to 'staff'
+    { username: 'admin', role: 'hospital', email: 'admin@example.com' },
+    { username: 'staff', role: 'admin', email: 'staff@example.com' },
   ];
 
   const demoPasswords: { [key: string]: string } = {
     patient: 'patient123',
-    hospital: 'hospital123', // Updated to match new username
     admin: 'admin123',
     staff: 'staff123',
   };
 
-  // Handle redirection when user state changes
   useEffect(() => {
-    console.log('User state changed:', user);
-    if (user) {
-      console.log('Redirecting based on role:', user.role);
-      switch (user.role) {
-        case 'patient':
-          navigate('/patient-dashboard', { replace: true });
-          break;
-        case 'hospital':
-          navigate('/hospital-dashboard', { replace: true });
-          break;
-        case 'admin':
-          navigate('/admin', { replace: true });
-          break;
-        case 'staff':
-          navigate('/staff-dashboard', { replace: true }); // Added staff redirection
-          break;
-        default:
-          navigate('/', { replace: true });
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+
+      if (parsedUser.role === 'patient' && location.pathname === '/login') {
+        navigate('/patient-dashboard');
+      } else if (parsedUser.role === 'hospital' && location.pathname === '/login') {
+        navigate('/hospital-dashboard');
+      } else if (parsedUser.role === 'admin' && location.pathname === '/login') {
+        navigate('/admin');
       }
     } else {
       const publicRoutes = ['/', '/get-started', '/login', '/about'];
       if (!publicRoutes.includes(location.pathname)) {
-        console.log('User not authenticated, redirecting to /login');
         navigate('/login', { replace: true });
       }
     }
-  }, [user, navigate, location.pathname]);
+  }, [navigate, location.pathname]);
 
-  const login = async (username: string, password: string, role: 'patient' | 'hospital' | 'admin' | 'staff') => {
+  const login = async (username: string, password: string, role: 'patient' | 'hospital' | 'admin') => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log('Attempting login for:', username, role); // Debug log
       await new Promise((resolve) => setTimeout(resolve, 1000));
       const foundUser = demoUsers.find(
         (u) => u.username === username && u.role === role
@@ -128,13 +115,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error('Invalid password');
       }
 
-      console.log('User found:', foundUser); // Debug log
       setUser(foundUser);
       localStorage.setItem('user', JSON.stringify(foundUser));
 
+      if (foundUser.role === 'patient') {
+        navigate('/patient-dashboard');
+      } else if (foundUser.role === 'hospital') {
+        navigate('/hospital-dashboard');
+      } else if (foundUser.role === 'admin') {
+        navigate('/admin');
+      }
+
       return true;
     } catch (err: any) {
-      console.error('Login error:', err.message); // Debug log
       setError(err.message || 'Login failed');
       return false;
     } finally {
@@ -146,7 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     username: string,
     password: string,
     email: string,
-    role: 'patient' | 'hospital' | 'admin' | 'staff',
+    role: 'patient' | 'hospital' | 'admin',
     phoneNumber?: string,
     gender?: 'male' | 'female' | 'other',
     age?: number,
@@ -186,10 +179,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           hospitalName,
           hospitalPhone,
         }),
-        ...(role === 'staff' && { // Added staff-specific fields
-          employeeId,
-          staffDepartment,
-        }),
       };
 
       demoUsers.push(newUser);
@@ -197,6 +186,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       setUser(newUser);
       localStorage.setItem('user', JSON.stringify(newUser));
+
+      if (newUser.role === 'patient') {
+        navigate('/patient-dashboard');
+      } else if (newUser.role === 'hospital') {
+        navigate('/hospital-dashboard');
+      } else if (newUser.role === 'admin') {
+        navigate('/admin');
+      }
 
       return true;
     } catch (err: any) {
@@ -216,7 +213,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin';
   const isHospital = user?.role === 'hospital';
-  const isStaff = user?.role === 'staff'; // Added for staff role checks
 
   return (
     <AuthContext.Provider
@@ -225,7 +221,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isAuthenticated,
         isAdmin,
         isHospital,
-        isStaff, // Added to context
         login,
         signup,
         logout,
